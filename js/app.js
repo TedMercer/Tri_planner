@@ -397,8 +397,69 @@ function openProfileView() {
     }
   });
 
+  // Change password section — only if this is the logged-in user's profile
+  if (hasEditAccess()) {
+    html += `
+      <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+        <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Change Password</div>
+        <div id="changePwSection">
+          <div style="margin-bottom:8px;">
+            <label style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;display:block;">Confirm Your Birthday</label>
+            <input type="date" id="cpBirthday" style="width:100%;background:var(--surface-3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;">
+          </div>
+          <div style="margin-bottom:8px;">
+            <input type="password" id="cpNew" placeholder="New password" style="width:100%;background:var(--surface-3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;">
+          </div>
+          <div style="margin-bottom:8px;">
+            <input type="password" id="cpConfirm" placeholder="Confirm new password" style="width:100%;background:var(--surface-3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;">
+          </div>
+          <div id="cpError" style="color:var(--danger);font-size:12px;min-height:18px;margin-bottom:6px;"></div>
+          <div id="cpSuccess" style="color:var(--success);font-size:12px;min-height:18px;margin-bottom:6px;"></div>
+          <button onclick="changePassword()" style="background:var(--accent);border:1px solid var(--accent);color:#fff;padding:8px 16px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Update Password</button>
+        </div>
+      </div>
+    `;
+  }
+
   document.getElementById('profileModalContent').innerHTML = html;
   document.getElementById('profileModal').classList.add('visible');
+}
+
+function changePassword() {
+  const birthday = document.getElementById('cpBirthday').value;
+  const newPw = document.getElementById('cpNew').value;
+  const confirm = document.getElementById('cpConfirm').value;
+  const errEl = document.getElementById('cpError');
+  const succEl = document.getElementById('cpSuccess');
+  errEl.textContent = '';
+  succEl.textContent = '';
+
+  const a = athlete();
+
+  if (!birthday) {
+    errEl.textContent = 'Please enter your birthday.';
+    return;
+  }
+  if (birthday !== a.birthday) {
+    errEl.textContent = 'Birthday does not match profile.';
+    return;
+  }
+  if (!newPw) {
+    errEl.textContent = 'New password cannot be empty.';
+    return;
+  }
+  if (newPw !== confirm) {
+    errEl.textContent = 'New passwords do not match.';
+    return;
+  }
+
+  a.passwordHash = simpleHash(newPw);
+  saveData();
+
+  document.getElementById('cpBirthday').value = '';
+  document.getElementById('cpNew').value = '';
+  document.getElementById('cpConfirm').value = '';
+  succEl.textContent = 'Password updated successfully.';
 }
 
 function closeProfileModal() {
