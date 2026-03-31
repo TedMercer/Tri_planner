@@ -29,97 +29,6 @@ triplan/
 └── README.md           # This file
 ```
 
-## Quick Start (Local)
-
-Just open `index.html` in any modern browser. No build tools, no dependencies, no server required.
-
-```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/triplan.git
-cd triplan
-
-# Open in browser
-open index.html        # macOS
-xdg-open index.html    # Linux
-start index.html       # Windows
-```
-
----
-
-## Deploy to GitHub Pages (Free Hosting)
-
-### Step 1: Create a GitHub Repository
-
-1. Go to [github.com/new](https://github.com/new)
-2. Name it `triplan` (or whatever you'd like)
-3. Set it to **Public** (required for free GitHub Pages)
-4. Do **NOT** initialize with a README (we already have one)
-5. Click **Create repository**
-
-### Step 2: Push Your Code
-
-Open your terminal and navigate to the `triplan` folder:
-
-```bash
-cd /path/to/triplan
-
-# Initialize git repo
-git init
-
-# Add all files
-git add .
-
-# First commit
-git commit -m "Initial commit — TriPlan training planner"
-
-# Add your remote (replace YOUR_USERNAME)
-git remote add origin https://github.com/YOUR_USERNAME/triplan.git
-
-# Push to main branch
-git push -u origin main
-```
-
-### Step 3: Enable GitHub Pages
-
-1. Go to your repo on GitHub: `https://github.com/YOUR_USERNAME/triplan`
-2. Click **Settings** (gear icon, top bar)
-3. Scroll down to **Pages** in the left sidebar
-4. Under **Source**, select:
-   - Branch: `main`
-   - Folder: `/ (root)`
-5. Click **Save**
-6. Wait 1–2 minutes for deployment
-
-### Step 4: Access Your Site
-
-Your site will be live at:
-
-```
-https://YOUR_USERNAME.github.io/triplan/
-```
-
-GitHub will show the URL in the Pages settings once it's deployed.
-
----
-
-## Default Login Credentials
-
-- **Admin Password:** `14_MA_Street_DSon1923!!!`
-- **Pre-loaded Athlete:** Teddy Mercer
-  - **User Password:** `default_change_me` (change this by creating a new profile)
-  - **A Race:** Jones Beach — 70.3, Sep 26, 2026
-  - **B Race:** Cohasset — Sprint, Jun 28, 2026
-  - **C Race:** Hopkinton Season Opener — Sprint, May 17, 2026
-
-### Changing Your Password
-
-Since passwords are stored client-side, the simplest way to change your password is:
-1. Export your data (JSON backup)
-2. Create a new profile with your desired password
-3. Import the old data into the new profile's activities
-
----
-
 ## Important Notes
 
 ### Data Storage
@@ -132,7 +41,7 @@ Since passwords are stored client-side, the simplest way to change your password
 - This uses client-side password hashing (not cryptographic — it's obfuscation)
 - Suitable for a personal/small-group tool, not for sensitive data
 - Anyone with browser dev tools can inspect localStorage
-- For real security, you'd need a backend with bcrypt and a database
+- For real security, we'd need a backend with bcrypt and a database
 
 ### Sharing with Training Partners
 Since localStorage is per-browser, each person visiting your GitHub Pages URL will have their **own independent copy** of the app. To share training plans:
@@ -144,7 +53,7 @@ Since localStorage is per-browser, each person visiting your GitHub Pages URL wi
 
 ## Future Upgrade Path
 
-When you're ready for shared data and real auth, the architecture is designed to migrate to:
+Real Auth
 
 | Component | Current | Future |
 |-----------|---------|--------|
@@ -153,7 +62,7 @@ When you're ready for shared data and real auth, the architecture is designed to
 | Database | localStorage | Firebase Firestore / Supabase |
 | Sync | None (per-browser) | Real-time across devices |
 
-The `appData` JSON structure maps directly to a Firestore document collection — the migration is straightforward.
+The `appData` JSON structure maps directly to a Firestore document collection — the migration is straightforward. Need to impliment
 
 ---
 
