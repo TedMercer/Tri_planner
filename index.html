@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TriPlan — Triathlon Training Planner</title>
+  <meta name="description" content="A clean, dark-themed triathlon training calendar for planning runs, bikes, and swims with weekly volume tracking.">
+  <meta name="theme-color" content="#0F1117">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏊</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 1: Admin Login
+     ═══════════════════════════════════════ -->
+<div class="auth-screen active" id="screenAdminLogin">
+  <div class="auth-card">
+    <div class="logo-section">
+      <div class="logo-mark">T3</div>
+      <h2>TriPlan</h2>
+      <p>Triathlon Training Planner</p>
+    </div>
+    <div class="form-group">
+      <label>Admin Password</label>
+      <input type="password" id="adminPassInput" placeholder="Enter admin password" autofocus>
+    </div>
+    <div class="error-msg" id="adminError"></div>
+    <button class="btn btn-primary" onclick="attemptAdminLogin()">Enter</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 2: Returner or New User
+     ═══════════════════════════════════════ -->
+<div class="auth-screen" id="screenUserChoice">
+  <div class="auth-card">
+    <div class="logo-section">
+      <div class="logo-mark">T3</div>
+      <h2>Welcome</h2>
+      <p>Are you a returning user or setting up a new profile?</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnReturner">Returner</button>
+      <button class="btn btn-primary" onclick="showNewUser()">New User</button>
+    </div>
+    <button class="back-link" onclick="logout()">← Log out</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 3a: Returner - Pick User
+     ═══════════════════════════════════════ -->
+<div class="auth-screen" id="screenReturner">
+  <div class="auth-card">
+    <div class="logo-section">
+      <h2>Select Profile</h2>
+      <p>Choose your profile to edit, or view anyone's plan</p>
+    </div>
+    <div class="user-select-list" id="returnerUserList"></div>
+    <div class="form-group">
+      <label>Your Password (for edit access)</label>
+      <input type="password" id="returnerPassInput" placeholder="Leave blank for view-only">
+    </div>
+    <div class="error-msg" id="returnerError"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="enterViewOnly()">View Only</button>
+      <button class="btn btn-primary" onclick="attemptUserLogin()">Edit Access</button>
+    </div>
+    <button class="back-link" onclick="showScreen('screenUserChoice')">← Back</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     SCREEN 3b: New User - Profile Setup
+     ═══════════════════════════════════════ -->
+<div class="auth-screen" id="screenNewUser">
+  <div class="auth-card" style="width:480px;">
+    <div class="logo-section">
+      <h2>Create Profile</h2>
+      <p>Set up your athlete profile</p>
+    </div>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="newName" placeholder="Your name">
+    </div>
+    <div class="form-group">
+      <label>Birthday</label>
+      <input type="date" id="newBirthday">
+    </div>
+    <div class="form-group">
+      <label>Set Your Password</label>
+      <input type="password" id="newPassword" placeholder="Used for edit access">
+    </div>
+
+    <div class="race-group a-race">
+      <div class="race-priority">A Race — Top Priority</div>
+      <div class="race-fields">
+        <input type="text" id="newARaceName" placeholder="Race name" class="full-width">
+        <input type="date" id="newARaceDate">
+        <select id="newARaceDist">
+          <option value="">Distance...</option>
+          <option value="Sprint">Sprint</option>
+          <option value="Olympic">Olympic</option>
+          <option value="70.3">70.3</option>
+          <option value="140.6">140.6</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="race-group b-race">
+      <div class="race-priority">B Race — Secondary</div>
+      <div class="race-fields">
+        <input type="text" id="newBRaceName" placeholder="Race name" class="full-width">
+        <input type="date" id="newBRaceDate">
+        <select id="newBRaceDist">
+          <option value="">Distance...</option>
+          <option value="Sprint">Sprint</option>
+          <option value="Olympic">Olympic</option>
+          <option value="70.3">70.3</option>
+          <option value="140.6">140.6</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="race-group c-race">
+      <div class="race-priority">C Race — Fun / Training</div>
+      <div class="race-fields">
+        <input type="text" id="newCRaceName" placeholder="Race name" class="full-width">
+        <input type="date" id="newCRaceDate">
+        <select id="newCRaceDist">
+          <option value="">Distance...</option>
+          <option value="Sprint">Sprint</option>
+          <option value="Olympic">Olympic</option>
+          <option value="70.3">70.3</option>
+          <option value="140.6">140.6</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="error-msg" id="newUserError"></div>
+    <button class="btn btn-primary" onclick="createNewUser()">Create Profile</button>
+    <button class="back-link" onclick="showScreen('screenUserChoice')">← Back</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MAIN APP
+     ═══════════════════════════════════════ -->
+<div id="mainApp">
+  <header class="app-header">
+    <div class="app-title">
+      <div class="logo">T3</div>
+      <h1>TriPlan <span id="appSubtitle"></span></h1>
+    </div>
+    <div class="header-right">
+      <div class="athlete-tabs" id="athleteTabs"></div>
+      <span id="accessBadge"></span>
+      <button onclick="jumpToToday()">Today</button>
+      <button onclick="openProfileView()">Profile</button>
+      <button onclick="exportData()">Export</button>
+      <button onclick="importData()">Import</button>
+      <button class="danger" onclick="switchUser()">Switch User</button>
+    </div>
+  </header>
+
+  <div class="profile-banner" id="profileBanner"></div>
+
+  <nav class="nav-bar">
+    <div class="week-nav">
+      <button class="nav-btn" onclick="shiftView(-4)" title="Back 4 weeks">⟪</button>
+      <button class="nav-btn" onclick="shiftView(-1)" title="Back 1 week">←</button>
+      <div class="current-view" id="currentView"></div>
+      <button class="nav-btn" onclick="shiftView(1)" title="Forward 1 week">→</button>
+      <button class="nav-btn" onclick="shiftView(4)" title="Forward 4 weeks">⟫</button>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot run"></div>Run (mi)</div>
+      <div class="legend-item"><div class="legend-dot bike"></div>Bike (mi)</div>
+      <div class="legend-item"><div class="legend-dot swim"></div>Swim (yd)</div>
+    </div>
+  </nav>
+
+  <div class="weeks-container" id="weeksContainer"></div>
+  <div class="load-more"><button onclick="loadMoreWeeks()">Load More Weeks ↓</button></div>
+</div>
+
+<!-- ── Activity Modal ── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Add Activity</h3>
+    <div class="form-group">
+      <label>Activity Type</label>
+      <div class="type-selector">
+        <button class="type-btn run" data-type="run" onclick="selectType('run')">🏃 Run</button>
+        <button class="type-btn bike" data-type="bike" onclick="selectType('bike')">🚴 Bike</button>
+        <button class="type-btn swim" data-type="swim" onclick="selectType('swim')">🏊 Swim</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label id="qtyLabel">Distance</label>
+      <input type="number" id="activityQty" step="0.1" min="0" placeholder="0">
+    </div>
+    <div class="form-group">
+      <label>Notes / Description</label>
+      <textarea id="activityNotes" placeholder="e.g., Tempo run, Zone 2 ride, drill sets..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveActivity()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Profile View Modal ── -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="width:440px;">
+    <h3>Athlete Profile</h3>
+    <div id="profileModalContent"></div>
+    <div class="modal-actions" style="margin-top:16px;">
+      <button class="btn-cancel" onclick="closeProfileModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script src="js/app.js"></script>
+</body>
+</html>
