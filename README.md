@@ -1,71 +1,43 @@
 # TriPlan — Triathlon Training Planner
 
-A clean, dark-themed triathlon training calendar for planning runs, bikes, and swims with weekly volume tracking, athlete profiles, and race countdowns.
-
-![TriPlan](https://img.shields.io/badge/TriPlan-Training%20Planner-E07B39?style=flat-square)
+A dark-themed triathlon training calendar with analytics, Strava sync, and multi-athlete support.
 
 ## Features
 
-- **Infinite calendar** — scroll forward and backward through weeks (Sun–Sat)
-- **Color-coded activities** — Run (orange), Bike (teal), Swim (blue)
-- **Weekly summaries** — automatic totals for miles run, miles biked, yards swum
-- **Weekly goals** — set volume targets with green/red hit indicators
-- **5 athlete profiles** — each with name, birthday, password, and A/B/C races
-- **Race countdowns** — days until each target race in the profile banner
-- **Admin gate** — master password to access the app
-- **Edit/View modes** — password-protected editing per athlete, view-only for others
-- **Export/Import** — JSON backup and restore
-- **Keyboard shortcuts** — ← → navigate weeks, T for today, Esc to close modals
+- **Infinite calendar** — Sun–Sat weeks, scroll forward/backward endlessly
+- **Planned vs Actual** — toggle between planned training and actual completed workouts
+- **Strava sync** — connect Strava to auto-import actual activities
+- **Analytics dashboard** — weekly/monthly bars, cumulative mileage, discipline split donut, training heatmap, planned vs actual comparison
+- **Athlete comparison** — overlay another athlete's data on your charts
+- **5 athlete profiles** — each with races, passwords, and independent data
+- **Race countdowns** — A/B/C race tracking with days-until display
 
 ## Project Structure
 
 ```
 triplan/
-├── index.html          # Main HTML structure
-├── css/
-│   └── style.css       # All styles
+├── index.html
+├── css/style.css
 ├── js/
-│   └── app.js          # Application logic
-└── README.md           # This file
+│   ├── app.js          # Core app logic, auth, calendar
+│   ├── strava.js       # Strava OAuth + activity sync
+│   └── analytics.js    # Chart.js analytics dashboard
+├── worker/
+│   └── strava-proxy.js # Cloudflare Worker for Strava token exchange
+└── README.md
 ```
 
-## Important Notes
+## Quick Start
 
-### Data Storage
-- All data is stored in your browser's **localStorage**
-- Data is **per-browser, per-device** — it won't sync between your laptop and phone
-- Clearing browser data will erase your training plans
-- **Always export a JSON backup** regularly
+Open `index.html` in any browser. No build tools required.
 
-### Security
-- This uses client-side password hashing (not cryptographic — it's obfuscation)
-- Suitable for a personal/small-group tool, not for sensitive data
-- Anyone with browser dev tools can inspect localStorage
-- For real security, we'd need a backend with bcrypt and a database
+## Data Notes
 
-### Sharing with Training Partners
-Since localStorage is per-browser, each person visiting your GitHub Pages URL will have their **own independent copy** of the app. To share training plans:
-1. One person exports their data as JSON
-2. Share the JSON file
-3. Other person imports it
-
----
-
-## Future Upgrade Path
-
-Real Auth
-
-| Component | Current | Future |
-|-----------|---------|--------|
-| Hosting | GitHub Pages | GitHub Pages (frontend) |
-| Auth | Client-side hash | Firebase Auth / Auth0 |
-| Database | localStorage | Firebase Firestore / Supabase |
-| Sync | None (per-browser) | Real-time across devices |
-
-The `appData` JSON structure maps directly to a Firestore document collection — the migration is straightforward. Need to impliment
-
----
+- All data stored in browser localStorage (per-device)
+- Export/Import JSON for backups and transfers
+- Strava sync imports last 30 days of Run, Bike, Swim activities
+- Planned and Actual data are stored separately
 
 ## License
 
-MIT — use it, modify it, share it.
+MIT

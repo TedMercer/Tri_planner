@@ -4,17 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TriPlan — Triathlon Training Planner</title>
-  <meta name="description" content="A clean, dark-themed triathlon training calendar for planning runs, bikes, and swims with weekly volume tracking.">
+  <meta name="description" content="A triathlon training calendar with analytics, Strava sync, and multi-athlete support.">
   <meta name="theme-color" content="#0F1117">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏊</text></svg>">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════
-     SCREEN 1: Admin Login
-     ═══════════════════════════════════════ -->
+<!-- SCREEN 1: Admin Login -->
 <div class="auth-screen active" id="screenAdminLogin">
   <div class="auth-card">
     <div class="logo-section">
@@ -31,9 +30,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SCREEN 2: Returner or New User
-     ═══════════════════════════════════════ -->
+<!-- SCREEN 2: Returner or New User -->
 <div class="auth-screen" id="screenUserChoice">
   <div class="auth-card">
     <div class="logo-section">
@@ -49,9 +46,7 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SCREEN 3a: Returner - Pick User
-     ═══════════════════════════════════════ -->
+<!-- SCREEN 3a: Returner -->
 <div class="auth-screen" id="screenReturner">
   <div class="auth-card">
     <div class="logo-section">
@@ -72,85 +67,47 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     SCREEN 3b: New User - Profile Setup
-     ═══════════════════════════════════════ -->
+<!-- SCREEN 3b: New User -->
 <div class="auth-screen" id="screenNewUser">
   <div class="auth-card" style="width:480px;">
     <div class="logo-section">
       <h2>Create Profile</h2>
       <p>Set up your athlete profile</p>
     </div>
-    <div class="form-group">
-      <label>Full Name</label>
-      <input type="text" id="newName" placeholder="Your name">
-    </div>
-    <div class="form-group">
-      <label>Birthday</label>
-      <input type="date" id="newBirthday">
-    </div>
-    <div class="form-group">
-      <label>Set Your Password</label>
-      <input type="password" id="newPassword" placeholder="Used for edit access">
-    </div>
-
+    <div class="form-group"><label>Full Name</label><input type="text" id="newName" placeholder="Your name"></div>
+    <div class="form-group"><label>Birthday</label><input type="date" id="newBirthday"></div>
+    <div class="form-group"><label>Set Your Password</label><input type="password" id="newPassword" placeholder="Used for edit access"></div>
     <div class="race-group a-race">
       <div class="race-priority">A Race — Top Priority</div>
       <div class="race-fields">
         <input type="text" id="newARaceName" placeholder="Race name" class="full-width">
         <input type="date" id="newARaceDate">
-        <select id="newARaceDist">
-          <option value="">Distance...</option>
-          <option value="Sprint">Sprint</option>
-          <option value="Olympic">Olympic</option>
-          <option value="70.3">70.3</option>
-          <option value="140.6">140.6</option>
-          <option value="Other">Other</option>
-        </select>
+        <select id="newARaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select>
       </div>
     </div>
-
     <div class="race-group b-race">
       <div class="race-priority">B Race — Secondary</div>
       <div class="race-fields">
         <input type="text" id="newBRaceName" placeholder="Race name" class="full-width">
         <input type="date" id="newBRaceDate">
-        <select id="newBRaceDist">
-          <option value="">Distance...</option>
-          <option value="Sprint">Sprint</option>
-          <option value="Olympic">Olympic</option>
-          <option value="70.3">70.3</option>
-          <option value="140.6">140.6</option>
-          <option value="Other">Other</option>
-        </select>
+        <select id="newBRaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select>
       </div>
     </div>
-
     <div class="race-group c-race">
       <div class="race-priority">C Race — Fun / Training</div>
       <div class="race-fields">
         <input type="text" id="newCRaceName" placeholder="Race name" class="full-width">
         <input type="date" id="newCRaceDate">
-        <select id="newCRaceDist">
-          <option value="">Distance...</option>
-          <option value="Sprint">Sprint</option>
-          <option value="Olympic">Olympic</option>
-          <option value="70.3">70.3</option>
-          <option value="140.6">140.6</option>
-          <option value="Other">Other</option>
-        </select>
+        <select id="newCRaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select>
       </div>
     </div>
-
     <div class="error-msg" id="newUserError"></div>
     <button class="btn btn-primary" onclick="createNewUser()">Create Profile</button>
     <button class="back-link" onclick="showScreen('screenUserChoice')">← Back</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     MAIN APP
-     ═══════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════ MAIN APP ═══════════════════════════════════════ -->
 <div id="mainApp">
   <header class="app-header">
     <div class="app-title">
@@ -170,26 +127,110 @@
 
   <div class="profile-banner" id="profileBanner"></div>
 
-  <nav class="nav-bar">
-    <div class="week-nav">
-      <button class="nav-btn" onclick="shiftView(-4)" title="Back 4 weeks">⟪</button>
-      <button class="nav-btn" onclick="shiftView(-1)" title="Back 1 week">←</button>
-      <div class="current-view" id="currentView"></div>
-      <button class="nav-btn" onclick="shiftView(1)" title="Forward 1 week">→</button>
-      <button class="nav-btn" onclick="shiftView(4)" title="Forward 4 weeks">⟫</button>
+  <!-- View Tabs -->
+  <div class="view-tabs-bar">
+    <div class="view-tabs">
+      <button class="view-tab active" data-view="calendar" onclick="switchMainView('calendar')">📅 Calendar</button>
+      <button class="view-tab" data-view="analytics" onclick="switchMainView('analytics')">📊 Analytics</button>
     </div>
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot run"></div>Run (mi)</div>
-      <div class="legend-item"><div class="legend-dot bike"></div>Bike (mi)</div>
-      <div class="legend-item"><div class="legend-dot swim"></div>Swim (yd)</div>
+    <div class="data-mode-toggle" id="dataModeToggle">
+      <button class="data-mode active" data-mode="planned" onclick="switchDataMode('planned')">Planned</button>
+      <button class="data-mode" data-mode="actual" onclick="switchDataMode('actual')">Actual</button>
     </div>
-  </nav>
+  </div>
 
-  <div class="weeks-container" id="weeksContainer"></div>
-  <div class="load-more"><button onclick="loadMoreWeeks()">Load More Weeks ↓</button></div>
+  <!-- CALENDAR VIEW -->
+  <div id="calendarView">
+    <nav class="nav-bar">
+      <div class="week-nav">
+        <button class="nav-btn" onclick="shiftView(-4)">⟪</button>
+        <button class="nav-btn" onclick="shiftView(-1)">←</button>
+        <div class="current-view" id="currentView"></div>
+        <button class="nav-btn" onclick="shiftView(1)">→</button>
+        <button class="nav-btn" onclick="shiftView(4)">⟫</button>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot run"></div>Run (mi)</div>
+        <div class="legend-item"><div class="legend-dot bike"></div>Bike (mi)</div>
+        <div class="legend-item"><div class="legend-dot swim"></div>Swim (yd)</div>
+      </div>
+    </nav>
+    <div class="weeks-container" id="weeksContainer"></div>
+    <div class="load-more"><button onclick="loadMoreWeeks()">Load More Weeks ↓</button></div>
+  </div>
+
+  <!-- ANALYTICS VIEW -->
+  <div id="analyticsView" style="display:none;">
+    <div class="analytics-container">
+      <div class="analytics-controls">
+        <div class="analytics-control-group">
+          <label>Time Range</label>
+          <select id="analyticsRange" onchange="renderAnalytics()">
+            <option value="4">Last 4 Weeks</option>
+            <option value="8" selected>Last 8 Weeks</option>
+            <option value="12">Last 12 Weeks</option>
+            <option value="16">Last 16 Weeks</option>
+            <option value="26">Last 26 Weeks</option>
+            <option value="52">Last Year</option>
+          </select>
+        </div>
+        <div class="analytics-control-group">
+          <label>Data Source</label>
+          <select id="analyticsDataSource" onchange="renderAnalytics()">
+            <option value="planned">Planned</option>
+            <option value="actual">Actual</option>
+            <option value="both">Planned vs Actual</option>
+          </select>
+        </div>
+        <div class="analytics-control-group">
+          <label>Compare With</label>
+          <select id="analyticsCompare" onchange="renderAnalytics()">
+            <option value="">None</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card wide">
+          <div class="chart-header">
+            <h4>Weekly Volume</h4>
+            <div class="chart-tabs" id="weeklyChartTabs">
+              <button class="chart-tab active" onclick="switchWeeklyChart('run')">Run</button>
+              <button class="chart-tab" onclick="switchWeeklyChart('bike')">Bike</button>
+              <button class="chart-tab" onclick="switchWeeklyChart('swim')">Swim</button>
+            </div>
+          </div>
+          <div class="chart-body"><canvas id="chartWeekly"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header"><h4>Monthly Volume</h4></div>
+          <div class="chart-body"><canvas id="chartMonthly"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h4>Discipline Split</h4></div>
+          <div class="chart-body donut-body"><canvas id="chartDonut"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-header"><h4>Cumulative Mileage</h4></div>
+          <div class="chart-body"><canvas id="chartCumulative"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h4>Planned vs Actual</h4></div>
+          <div class="chart-body"><canvas id="chartPvA"></canvas></div>
+        </div>
+
+        <div class="chart-card wide">
+          <div class="chart-header"><h4>Training Heatmap</h4></div>
+          <div class="chart-body heatmap-body" id="heatmapContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- ── Activity Modal ── -->
+<!-- Modals -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Add Activity</h3>
@@ -216,9 +257,8 @@
   </div>
 </div>
 
-<!-- ── Profile View Modal ── -->
 <div class="modal-overlay" id="profileModal">
-  <div class="modal" style="width:440px;">
+  <div class="modal" style="width:460px;max-height:90vh;overflow-y:auto;">
     <h3>Athlete Profile</h3>
     <div id="profileModalContent"></div>
     <div class="modal-actions" style="margin-top:16px;">
@@ -230,5 +270,7 @@
 <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script src="js/app.js"></script>
+<script src="js/strava.js"></script>
+<script src="js/analytics.js"></script>
 </body>
 </html>
