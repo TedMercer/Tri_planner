@@ -117,6 +117,7 @@
     <div class="view-tabs">
       <button class="view-tab active" data-view="calendar" onclick="switchMainView('calendar')">📅 Calendar</button>
       <button class="view-tab" data-view="analytics" onclick="switchMainView('analytics')">📊 Analytics</button>
+      <button class="view-tab" data-view="guide" onclick="switchMainView('guide')">📖 User Guide</button>
     </div>
     <div class="data-mode-toggle" id="dataModeToggle">
       <button class="data-mode active" data-mode="planned" onclick="switchDataMode('planned')">Planned</button>
@@ -151,6 +152,7 @@
         <div class="analytics-control-group"><label>Time Range</label><select id="analyticsRange" onchange="renderAnalytics()"><option value="4">Last 4 Weeks</option><option value="8" selected>Last 8 Weeks</option><option value="12">Last 12 Weeks</option><option value="16">Last 16 Weeks</option><option value="26">Last 26 Weeks</option><option value="52">Last Year</option></select></div>
         <div class="analytics-control-group"><label>Data Source</label><select id="analyticsDataSource" onchange="renderAnalytics()"><option value="planned">Planned</option><option value="actual">Actual</option><option value="both">Planned vs Actual</option></select></div>
         <div class="analytics-control-group"><label>Compare With</label><select id="analyticsCompare" onchange="renderAnalytics()"><option value="">None</option></select></div>
+        <div class="analytics-control-group"><label>Week Starts</label><select id="analyticsWeekStart" onchange="changeWeekStartFromAnalytics()"><option value="0">Sunday</option><option value="1">Monday</option></select></div>
       </div>
       <div class="charts-grid">
         <div class="chart-card wide"><div class="chart-header"><h4>Weekly Volume</h4><div class="chart-tabs" id="weeklyChartTabs"><button class="chart-tab active" onclick="switchWeeklyChart('run')">Run</button><button class="chart-tab" onclick="switchWeeklyChart('bike')">Bike</button><button class="chart-tab" onclick="switchWeeklyChart('swim')">Swim</button></div></div><div class="chart-body"><canvas id="chartWeekly"></canvas></div></div>
@@ -159,6 +161,227 @@
         <div class="chart-card"><div class="chart-header"><h4>Cumulative Mileage</h4></div><div class="chart-body"><canvas id="chartCumulative"></canvas></div></div>
         <div class="chart-card"><div class="chart-header"><h4>Planned vs Actual</h4></div><div class="chart-body"><canvas id="chartPvA"></canvas></div></div>
         <div class="chart-card wide"><div class="chart-header"><h4>Training Heatmap</h4></div><div class="chart-body heatmap-body" id="heatmapContainer"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER GUIDE VIEW -->
+  <div id="guideView" style="display:none;">
+    <div class="guide-container">
+
+      <!-- Table of Contents -->
+      <div class="guide-toc">
+        <h3>Contents</h3>
+        <a href="#guide-getting-started" onclick="scrollGuide('guide-getting-started')">Getting Started</a>
+        <a href="#guide-calendar" onclick="scrollGuide('guide-calendar')">Using the Calendar</a>
+        <a href="#guide-activities" onclick="scrollGuide('guide-activities')">Adding Activities</a>
+        <a href="#guide-drag-drop" onclick="scrollGuide('guide-drag-drop')">Drag & Drop</a>
+        <a href="#guide-templates" onclick="scrollGuide('guide-templates')">Activity Templates</a>
+        <a href="#guide-planned-actual" onclick="scrollGuide('guide-planned-actual')">Planned vs Actual</a>
+        <a href="#guide-goals" onclick="scrollGuide('guide-goals')">Weekly Goals</a>
+        <a href="#guide-profiles" onclick="scrollGuide('guide-profiles')">Athlete Profiles</a>
+        <a href="#guide-analytics" onclick="scrollGuide('guide-analytics')">Analytics Dashboard</a>
+        <a href="#guide-strava" onclick="scrollGuide('guide-strava')">Strava Integration</a>
+        <a href="#guide-shortcuts" onclick="scrollGuide('guide-shortcuts')">Keyboard Shortcuts</a>
+        <a href="#guide-data" onclick="scrollGuide('guide-data')">Data & Sync</a>
+      </div>
+
+      <!-- Guide Content -->
+      <div class="guide-content">
+
+        <section id="guide-getting-started" class="guide-section">
+          <h2>Getting Started</h2>
+          <p>TriPlan is a triathlon training planner built for athletes who want a clean, visual way to plan their swim, bike, and run training. Here's how to get going:</p>
+          <div class="guide-steps">
+            <div class="guide-step">
+              <div class="guide-step-num">1</div>
+              <div><strong>Log in</strong> — Enter the admin password to access the app. This is a shared gate for all users.</div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-num">2</div>
+              <div><strong>Choose your profile</strong> — If you're new, click "New User" and fill in your name, birthday, password, and target races. If you're returning, select your profile and enter your password for editing access, or browse in view-only mode.</div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-num">3</div>
+              <div><strong>Start planning</strong> — You'll land on the Calendar view showing the current week. Click the <code>+</code> button on any day to add a workout.</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="guide-calendar" class="guide-section">
+          <h2>Using the Calendar</h2>
+          <p>The calendar displays your training week in a grid layout with one column per day. Each week shows a summary bar at the bottom with total run miles, bike miles, swim yards, and session count.</p>
+          <div class="guide-info-box">
+            <strong>Navigation</strong>
+            <p>Use the arrow buttons in the nav bar to move between weeks. The single arrows <code>←</code> <code>→</code> move one week at a time, while the double arrows <code>⟪</code> <code>⟫</code> jump four weeks. Click <strong>Today</strong> to snap back to the current week.</p>
+          </div>
+          <div class="guide-info-box">
+            <strong>Week Start Day</strong>
+            <p>By default, weeks run Sunday–Saturday. You can change this to Monday–Sunday in your <strong>Profile</strong> settings or from the Analytics tab's "Week Starts" dropdown. This preference is saved to your profile.</p>
+          </div>
+          <p>Today's date is highlighted with an orange accent in the day header so you can quickly find where you are.</p>
+        </section>
+
+        <section id="guide-activities" class="guide-section">
+          <h2>Adding Activities</h2>
+          <p>Click the <code>+</code> button on any day to open the activity modal. You'll see:</p>
+          <div class="guide-feature-grid">
+            <div class="guide-feature">
+              <div class="guide-feature-icon" style="color:var(--run-primary);">🏃</div>
+              <div><strong>Run</strong> — tracked in miles</div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature-icon" style="color:var(--bike-primary);">🚴</div>
+              <div><strong>Bike</strong> — tracked in miles</div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature-icon" style="color:var(--swim-primary);">🏊</div>
+              <div><strong>Swim</strong> — tracked in yards</div>
+            </div>
+          </div>
+          <p>Select the activity type, enter the distance, and optionally add notes describing the workout (e.g., "Tempo run", "200 FS, 200 Pull, 200 FS", "Z2 easy spin"). Click <strong>Save</strong> or press <strong>Enter</strong> to add it.</p>
+          <p>To remove an activity, hover over it (or tap on mobile) and click the <strong>×</strong> button that appears in the top-right corner of the card.</p>
+        </section>
+
+        <section id="guide-drag-drop" class="guide-section">
+          <h2>Drag & Drop</h2>
+          <p>Need to move a workout to a different day? On desktop, click and hold any activity card, then drag it to the target day. The destination will highlight with an orange dashed border. Release to drop.</p>
+          <div class="guide-info-box">
+            <strong>Note:</strong> Drag & drop works on desktop browsers only and requires edit access. On mobile, delete and re-add using a template (it's fast — see below).
+          </div>
+        </section>
+
+        <section id="guide-templates" class="guide-section">
+          <h2>Activity Templates</h2>
+          <p>When you open the Add Activity modal, you'll see a <strong>Quick Templates</strong> section at the top. This shows your recent unique workouts as clickable chips. Tap one to instantly fill in the type, distance, and notes.</p>
+          <p>To save a workout as a permanent template, check the <strong>"Save as template for quick reuse"</strong> checkbox before saving. Saved templates always appear first in the list.</p>
+          <p>Templates are great for recurring workouts — your standard swim set, your regular Z2 ride, your go-to tempo run.</p>
+        </section>
+
+        <section id="guide-planned-actual" class="guide-section">
+          <h2>Planned vs Actual</h2>
+          <p>The <strong>Planned / Actual</strong> toggle at the top of the app switches between two independent data layers:</p>
+          <div class="guide-feature-grid">
+            <div class="guide-feature">
+              <div class="guide-feature-icon">📋</div>
+              <div><strong>Planned</strong> — your training plan. What you intend to do. Add workouts here when planning your week ahead of time.</div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature-icon">✅</div>
+              <div><strong>Actual</strong> — what you actually completed. Add workouts here after you've done them, or sync from Strava to auto-import.</div>
+            </div>
+          </div>
+          <p>Actual activities display with a dashed border and a small "✓ actual" tag so you can visually distinguish them. The Analytics tab has a <strong>Planned vs Actual</strong> chart that compares the two side-by-side.</p>
+        </section>
+
+        <section id="guide-goals" class="guide-section">
+          <h2>Weekly Goals</h2>
+          <p>Click the <strong>🎯 Goals</strong> button on any week header to set target volumes for that week. You can set separate goals for run (miles), bike (miles), and swim (yards).</p>
+          <p>The weekly summary bar will show your progress against each goal:</p>
+          <div class="guide-feature-grid">
+            <div class="guide-feature">
+              <div class="guide-feature-icon" style="color:var(--success);">✓</div>
+              <div><strong style="color:var(--success);">Green</strong> — goal met or exceeded</div>
+            </div>
+            <div class="guide-feature">
+              <div class="guide-feature-icon" style="color:var(--danger);">○</div>
+              <div><strong style="color:var(--danger);">Red</strong> — goal not yet reached</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="guide-profiles" class="guide-section">
+          <h2>Athlete Profiles</h2>
+          <p>TriPlan supports up to <strong>5 athlete profiles</strong>. Each profile has:</p>
+          <div class="guide-list">
+            <div>Name, birthday, and age (auto-calculated)</div>
+            <div>A personal password for edit access</div>
+            <div>A/B/C target races with dates, distances, and countdown timers</div>
+            <div>Independent planned and actual activity data</div>
+            <div>Week start day preference (Sunday or Monday)</div>
+            <div>Optional Strava connection</div>
+          </div>
+          <p>Click the <strong>Profile</strong> button in the header to view your full profile, change your password (requires birthday confirmation), adjust your week start day, or manage your Strava connection.</p>
+          <p>Use the athlete tabs in the header to switch between profiles. You can always <em>view</em> any profile, but you can only <em>edit</em> the one you logged into with the correct password.</p>
+        </section>
+
+        <section id="guide-analytics" class="guide-section">
+          <h2>Analytics Dashboard</h2>
+          <p>The Analytics tab provides six visualizations of your training data. Use the controls at the top to adjust the time range, data source, compare with another athlete, and set the week start day.</p>
+
+          <div class="guide-chart-explain">
+            <h4>📊 Weekly Volume</h4>
+            <p>Bar chart showing your volume per week for a single discipline. Use the <strong>Run / Bike / Swim</strong> tabs to switch between them. If you've selected a comparison athlete, their data appears as a second bar in each week. This is your go-to chart for spotting training load trends — are you building consistently, or are there gaps?</p>
+          </div>
+
+          <div class="guide-chart-explain">
+            <h4>📊 Monthly Volume</h4>
+            <p>Stacked bar chart combining all three disciplines per month. Run and bike are in miles; swim is displayed in hundreds of yards (so "25" means 2,500 yards). This gives you the big-picture view of how your total training volume shifts month to month.</p>
+          </div>
+
+          <div class="guide-chart-explain">
+            <h4>🍩 Discipline Split</h4>
+            <p>Donut chart showing the percentage breakdown of your training across run, bike, and swim. The volumes are normalized (swim yards are converted to equivalent effort miles) so the proportions are meaningful. Useful for checking if you're neglecting a discipline.</p>
+          </div>
+
+          <div class="guide-chart-explain">
+            <h4>📈 Cumulative Mileage</h4>
+            <p>Line chart tracking your season-to-date totals for run and bike over the selected time range. The filled area shows the accumulation over time. If you've selected a comparison athlete, their run total appears as a dashed line overlay. Great for seeing if you're on track for a mileage target.</p>
+          </div>
+
+          <div class="guide-chart-explain">
+            <h4>📊 Planned vs Actual</h4>
+            <p>Side-by-side bar chart comparing your planned volume against your actual completed volume per week. All three disciplines are combined into "equivalent miles" (swim yards normalized). This reveals how well you're executing your plan — are you consistently hitting your targets, or falling short?</p>
+          </div>
+
+          <div class="guide-chart-explain">
+            <h4>🟧 Training Heatmap</h4>
+            <p>A GitHub-contribution-style grid where each cell is one day. Darker orange = more training volume that day. All disciplines are combined (swim normalized). Hover over any cell to see the exact date and volume. This makes rest days and training blocks visually obvious at a glance.</p>
+          </div>
+        </section>
+
+        <section id="guide-strava" class="guide-section">
+          <h2>Strava Integration</h2>
+          <p>You can connect your Strava account to automatically import completed activities into your <strong>Actual</strong> data. This requires one-time setup:</p>
+          <div class="guide-steps">
+            <div class="guide-step">
+              <div class="guide-step-num">1</div>
+              <div>Register a Strava API app at <strong>strava.com/settings/api</strong></div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-num">2</div>
+              <div>Deploy a small Cloudflare Worker (free) to handle the secure token exchange</div>
+            </div>
+            <div class="guide-step">
+              <div class="guide-step-num">3</div>
+              <div>Add your Client ID and Worker URL to <code>js/strava.js</code></div>
+            </div>
+          </div>
+          <p>Once configured, click <strong>Connect Strava</strong> in your Profile modal. After authorizing, click <strong>↻ Sync Recent Activities</strong> to import your last 30 days of runs, rides, and swims. The sync is smart — it won't duplicate activities that have already been imported.</p>
+          <p>Strava imports Run, Bike, and Swim activities. Other activity types (hiking, yoga, etc.) are skipped. Distances are automatically converted: meters → miles for run/bike, meters → yards for swim.</p>
+        </section>
+
+        <section id="guide-shortcuts" class="guide-section">
+          <h2>Keyboard Shortcuts</h2>
+          <div class="guide-shortcuts-grid">
+            <div class="guide-shortcut"><kbd>←</kbd><span>Previous week</span></div>
+            <div class="guide-shortcut"><kbd>→</kbd><span>Next week</span></div>
+            <div class="guide-shortcut"><kbd>T</kbd><span>Jump to today</span></div>
+            <div class="guide-shortcut"><kbd>Enter</kbd><span>Save activity (when modal is open)</span></div>
+            <div class="guide-shortcut"><kbd>Esc</kbd><span>Close modal / dialog</span></div>
+          </div>
+        </section>
+
+        <section id="guide-data" class="guide-section">
+          <h2>Data & Sync</h2>
+          <p>All training data is stored in <strong>Firebase Firestore</strong> (cloud database). This means your data syncs automatically across all your devices — laptop, phone, tablet. No manual export/import needed.</p>
+          <div class="guide-info-box">
+            <strong>Export</strong>
+            <p>Click the <strong>Export</strong> button in the header to download a JSON backup of all athlete data. This is useful for archiving or if you ever want to migrate to a different system.</p>
+          </div>
+          <p>Each athlete's data is independent — editing one profile never affects another. The admin password gates entry to the app, while individual user passwords control edit access to each profile.</p>
+        </section>
+
       </div>
     </div>
   </div>

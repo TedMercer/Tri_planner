@@ -142,6 +142,7 @@ async function seedDefaultAthlete() {
     actuals: {},
     goals: {},
     strava: null,
+    weekStartDay: 0,
     createdAt: Date.now()
   });
 }
@@ -149,13 +150,46 @@ async function seedDefaultAthlete() {
 // ══════════════════════════════════════════
 // DATE HELPERS
 // ══════════════════════════════════════════
-function getThisSunday() {
+// weekStartDay: 0 = Sunday, 1 = Monday
+function getWeekStartDay() {
+  const a = currentAthlete();
+  return (a && a.weekStartDay === 1) ? 1 : 0;
+}
+
+function getThisWeekStart() {
+  const wsd = getWeekStartDay();
   const now = new Date();
   const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  d.setDate(d.getDate() - d.getDay());
+  let diff = d.getDay() - wsd;
+  if (diff < 0) diff += 7;
+  d.setDate(d.getDate() - diff);
   return d;
 }
-function getSundayForOffset(offset) { const s = getThisSunday(); s.setDate(s.getDate() + offset * 7); return s; }
+
+function getWeekStartForOffset(offset) {
+  const s = getThisWeekStart();
+  s.setDate(s.getDate() + offset * 7);
+  return s;
+}
+
+// Ordered day names for current week-start preference
+function getOrderedDays() {
+  const wsd = getWeekStartDay();
+  if (wsd === 1) return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+}
+
+// Ordered day-of-week indices (0=Sun,1=Mon,...6=Sat)
+function getOrderedDayIndices() {
+  const wsd = getWeekStartDay();
+  if (wsd === 1) return [1,2,3,4,5,6,0];
+  return [0,1,2,3,4,5,6];
+}
+
+// Legacy aliases used by analytics
+function getThisSunday() { return getThisWeekStart(); }
+function getSundayForOffset(offset) { return getWeekStartForOffset(offset); }
+
 function dateKey(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function weekKey(d) { return dateKey(d); }
 function todayKey() { return dateKey(new Date()); }
@@ -187,7 +221,36 @@ function switchMainView(view) {
   document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   document.getElementById('calendarView').style.display = view === 'calendar' ? '' : 'none';
   document.getElementById('analyticsView').style.display = view === 'analytics' ? '' : 'none';
-  if (view === 'analytics') { populateCompareDropdown(); renderAnalytics(); }
+  document.getElementById('guideView').style.display = view === 'guide' ? '' : 'none';
+  // Hide planned/actual toggle on guide
+  const toggle = document.getElementById('dataModeToggle');
+  if (toggle) toggle.style.display = view === 'guide' ? 'none' : '';
+  if (view === 'analytics') {
+    const wsd = getWeekStartDay();
+    const sel = document.getElementById('analyticsWeekStart');
+    if (sel) sel.value = wsd;
+    populateCompareDropdown();
+    renderAnalytics();
+  }
+}
+
+function scrollGuide(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function changeWeekStartFromAnalytics() {
+  const val = parseInt(document.getElementById('analyticsWeekStart').value);
+  if (!hasEditAccess()) {
+    // View-only users can't persist, but we allow local override for analytics view
+    const a = currentAthlete();
+    if (a) a.weekStartDay = val;
+    renderAnalytics();
+    render();
+    return;
+  }
+  await setWeekStartDay(val);
+  renderAnalytics();
 }
 function switchDataMode(mode) {
   currentDataMode = mode;
@@ -296,7 +359,7 @@ async function createNewUser() {
       b: { name: document.getElementById('newBRaceName').value.trim(), date: document.getElementById('newBRaceDate').value, distance: document.getElementById('newBRaceDist').value },
       c: { name: document.getElementById('newCRaceName').value.trim(), date: document.getElementById('newCRaceDate').value, distance: document.getElementById('newCRaceDist').value },
     },
-    activities: {}, actuals: {}, goals: {}, strava: null, createdAt: Date.now()
+    activities: {}, actuals: {}, goals: {}, strava: null, weekStartDay: 0, createdAt: Date.now()
   };
   await window.FB.setDoc(docRef, data);
   await loadAllAthletes();
@@ -393,6 +456,18 @@ function openProfileView() {
   // Strava
   if (typeof buildStravaProfileSection === 'function') html += buildStravaProfileSection(a);
 
+  // Week start preference (edit access only)
+  if (hasEditAccess()) {
+    const curWsd = a.weekStartDay === 1 ? 1 : 0;
+    html += `<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+      <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Week Start Day</div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="setWeekStartDay(0)" class="week-start-opt ${curWsd===0?'active':''}" style="flex:1;padding:9px;border-radius:8px;border:2px solid ${curWsd===0?'var(--accent)':'var(--border)'};background:${curWsd===0?'rgba(224,123,57,0.08)':'transparent'};color:${curWsd===0?'var(--accent)':'var(--text-muted)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Sunday</button>
+        <button onclick="setWeekStartDay(1)" class="week-start-opt ${curWsd===1?'active':''}" style="flex:1;padding:9px;border-radius:8px;border:2px solid ${curWsd===1?'var(--accent)':'var(--border)'};background:${curWsd===1?'rgba(224,123,57,0.08)':'transparent'};color:${curWsd===1?'var(--accent)':'var(--text-muted)'};font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Monday</button>
+      </div>
+    </div>`;
+  }
+
   // Change password
   if (hasEditAccess()) {
     html += `<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;"><div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Change Password</div><div><div style="margin-bottom:8px;"><label style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;display:block;">Confirm Your Birthday</label><input type="date" id="cpBirthday" style="width:100%;background:var(--surface-3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;"></div><div style="margin-bottom:8px;"><input type="password" id="cpNew" placeholder="New password" style="width:100%;background:var(--surface-3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;"></div><div style="margin-bottom:8px;"><input type="password" id="cpConfirm" placeholder="Confirm new password" style="width:100%;background:var(--surface-3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;letter-spacing:1px;"></div><div id="cpError" style="color:var(--danger);font-size:12px;min-height:18px;margin-bottom:6px;"></div><div id="cpSuccess" style="color:var(--success);font-size:12px;min-height:18px;margin-bottom:6px;"></div><button onclick="changePassword()" style="background:var(--accent);border:1px solid var(--accent);color:#fff;padding:8px 16px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;">Update Password</button></div></div>`;
@@ -422,6 +497,15 @@ async function changePassword() {
 
 function closeProfileModal() { document.getElementById('profileModal').classList.remove('visible'); }
 
+async function setWeekStartDay(day) {
+  const a = currentAthlete();
+  a.weekStartDay = day;
+  await saveAthlete(a);
+  showToast(`Week now starts on ${day === 1 ? 'Monday' : 'Sunday'}`);
+  openProfileView(); // Refresh modal to update button states
+  render();
+}
+
 // ══════════════════════════════════════════
 // RENDER CALENDAR
 // ══════════════════════════════════════════
@@ -441,11 +525,11 @@ function loadMoreWeeks() {
 }
 
 function buildWeekBlock(weekOffset) {
-  const sunday = getSundayForOffset(weekOffset);
-  const saturday = new Date(sunday); saturday.setDate(sunday.getDate() + 6);
-  const wk = weekKey(sunday);
-  const thisSunday = getThisSunday();
-  const weekNum = Math.round((sunday - thisSunday) / (7 * 86400000));
+  const weekStart = getWeekStartForOffset(weekOffset);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6);
+  const wk = weekKey(weekStart);
+  const thisWeekStart = getThisWeekStart();
+  const weekNum = Math.round((weekStart - thisWeekStart) / (7 * 86400000));
   let weekLabel;
   if (weekNum === 0) weekLabel = 'This Week'; else if (weekNum === 1) weekLabel = 'Next Week';
   else if (weekNum === -1) weekLabel = 'Last Week'; else if (weekNum > 0) weekLabel = `+${weekNum} Weeks`;
@@ -457,33 +541,34 @@ function buildWeekBlock(weekOffset) {
   const goals = (a.goals || {})[wk] || {};
   const editing = hasEditAccess() && currentDataMode === 'planned';
 
-  block.innerHTML = `<div class="week-header"><div><span class="week-label">${weekLabel}</span> <span class="week-dates">${formatDate(sunday)} – ${formatDate(saturday)}, ${saturday.getFullYear()}</span></div>${editing ? `<button class="week-goals-toggle" onclick="toggleGoals('${wk}')">🎯 Goals</button>` : ''}</div>
+  block.innerHTML = `<div class="week-header"><div><span class="week-label">${weekLabel}</span> <span class="week-dates">${formatDate(weekStart)} – ${formatDate(weekEnd)}, ${weekEnd.getFullYear()}</span></div>${editing ? `<button class="week-goals-toggle" onclick="toggleGoals('${wk}')">🎯 Goals</button>` : ''}</div>
     ${editing ? `<div class="week-goals" id="goals-${wk}"><div class="goal-input-group"><label>🏃 Run:</label><input type="number" step="0.1" min="0" value="${goals.run||''}" onchange="setGoal('${wk}','run',this.value)" placeholder="—"><span class="unit">mi</span></div><div class="goal-input-group"><label>🚴 Bike:</label><input type="number" step="0.1" min="0" value="${goals.bike||''}" onchange="setGoal('${wk}','bike',this.value)" placeholder="—"><span class="unit">mi</span></div><div class="goal-input-group"><label>🏊 Swim:</label><input type="number" step="1" min="0" value="${goals.swim||''}" onchange="setGoal('${wk}','swim',this.value)" placeholder="—"><span class="unit">yd</span></div></div>` : ''}
-    <div class="days-grid">${buildDays(sunday, editing)}</div>${buildSummary(sunday, wk)}`;
+    <div class="days-grid">${buildDays(weekStart, editing)}</div>${buildSummary(weekStart, wk)}`;
   return block;
 }
 
-function buildDays(sunday, editing) {
+function buildDays(weekStart, editing) {
   const tk = todayKey(); const acts = getActivities(); const isActual = currentDataMode === 'actual';
+  const dayNames = getOrderedDays();
   let html = '';
   for (let i = 0; i < 7; i++) {
-    const d = new Date(sunday); d.setDate(sunday.getDate() + i); const dk = dateKey(d);
+    const d = new Date(weekStart); d.setDate(weekStart.getDate() + i); const dk = dateKey(d);
     const dayActs = acts[dk] || [];
     let cards = '';
     dayActs.forEach((act, idx) => {
       const u = act.type === 'swim' ? 'yd' : 'mi';
-      const dragAttr = editing ? `draggable="true" ondragstart="onDragStart(event,'${dk}',${idx})"` : '';
+      const dragAttr = editing ? `draggable="true" ondragstart="onDragStart(event,'${dk}',${idx})" ondragend="onDragEnd(event)"` : '';
       cards += `<div class="activity-card ${act.type} ${isActual?'actual-data':''}" ${dragAttr}>${editing?`<button class="remove-activity" onclick="removeActivity('${dk}',${idx})">×</button>`:''}<div class="activity-type">${act.type}</div><div class="activity-qty">${act.qty}<span class="unit-label"> ${u}</span></div>${act.notes?`<div class="activity-notes">${escapeHtml(act.notes)}</div>`:''}</div>`;
     });
-    const dropAttr = editing ? `ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${dk}')"` : '';
-    html += `<div class="day-column"><div class="day-header ${dk===tk?'today':''}">${DAYS[i]}<span class="day-date">${d.getDate()}</span></div><div class="day-body" ${dropAttr}>${cards}<button class="add-activity-btn ${editing?'':'disabled'}" onclick="${editing?`openModal('${dk}')`:''}" >+</button></div></div>`;
+    const dropAttr = editing ? `ondragenter="onDragEnter(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${dk}')"` : '';
+    html += `<div class="day-column"><div class="day-header ${dk===tk?'today':''}">${dayNames[i]}<span class="day-date">${d.getDate()}</span></div><div class="day-body" ${dropAttr}>${cards}<button class="add-activity-btn ${editing?'':'disabled'}" onclick="${editing?`openModal('${dk}')`:''}" >+</button></div></div>`;
   }
   return html;
 }
 
-function buildSummary(sunday, wk) {
+function buildSummary(weekStart, wk) {
   let rT=0,bT=0,sT=0,sess=0; const acts = getActivities();
-  for (let i=0;i<7;i++) { const d=new Date(sunday); d.setDate(sunday.getDate()+i); const da=acts[dateKey(d)]||[];
+  for (let i=0;i<7;i++) { const d=new Date(weekStart); d.setDate(weekStart.getDate()+i); const da=acts[dateKey(d)]||[];
     sess+=da.length; da.forEach(a=>{if(a.type==='run')rT+=parseFloat(a.qty)||0;else if(a.type==='bike')bT+=parseFloat(a.qty)||0;else if(a.type==='swim')sT+=parseFloat(a.qty)||0;}); }
   const a = currentAthlete(); const goals = a ? ((a.goals||{})[wk]||{}) : {};
   const gh=(t,g,u)=>{if(!g)return'';const v=parseFloat(g);return`<div class="stat-goal ${t>=v?'met':'unmet'}">/ ${v} ${u} ${t>=v?'✓':''}</div>`;};
@@ -495,33 +580,72 @@ function buildSummary(sunday, wk) {
 // ══════════════════════════════════════════
 let dragSourceDk = null;
 let dragSourceIdx = null;
+let dragCounter = 0; // Track nested dragenter/dragleave
 
 function onDragStart(e, dk, idx) {
   dragSourceDk = dk; dragSourceIdx = idx;
   e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', ''); // Required for Firefox
-  e.target.closest('.activity-card').classList.add('dragging');
+  e.dataTransfer.setData('text/plain', dk + '|' + idx);
+  // Delay adding class so the drag image isn't affected
+  setTimeout(() => {
+    if (e.target && e.target.closest) {
+      const card = e.target.closest('.activity-card');
+      if (card) card.classList.add('dragging');
+    }
+  }, 0);
+}
+
+function onDragEnd(e) {
+  // Clean up all drag states
+  document.querySelectorAll('.activity-card.dragging').forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.day-body.drop-target').forEach(el => el.classList.remove('drop-target'));
+  dragCounter = 0;
+}
+
+function onDragEnter(e) {
+  e.preventDefault();
+  const body = e.currentTarget;
+  dragCounter++;
+  body.classList.add('drop-target');
 }
 
 function onDragOver(e) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-  e.currentTarget.classList.add('drop-target');
 }
 
 function onDragLeave(e) {
-  e.currentTarget.classList.remove('drop-target');
+  const body = e.currentTarget;
+  dragCounter--;
+  if (dragCounter <= 0) {
+    dragCounter = 0;
+    body.classList.remove('drop-target');
+  }
 }
 
 async function onDrop(e, targetDk) {
   e.preventDefault();
+  dragCounter = 0;
   e.currentTarget.classList.remove('drop-target');
+
+  // Also try reading from dataTransfer as fallback
+  if (dragSourceDk === null || dragSourceIdx === null) {
+    const data = e.dataTransfer.getData('text/plain');
+    if (data && data.includes('|')) {
+      const parts = data.split('|');
+      dragSourceDk = parts[0];
+      dragSourceIdx = parseInt(parts[1]);
+    }
+  }
+
   if (dragSourceDk === null || dragSourceIdx === null) return;
   if (dragSourceDk === targetDk) { dragSourceDk = null; dragSourceIdx = null; return; }
 
   const a = currentAthlete();
   const field = currentDataMode === 'actual' ? 'actuals' : 'activities';
-  if (!a[field] || !a[field][dragSourceDk] || !a[field][dragSourceDk][dragSourceIdx]) return;
+  if (!a[field] || !a[field][dragSourceDk] || !a[field][dragSourceDk][dragSourceIdx]) {
+    dragSourceDk = null; dragSourceIdx = null; return;
+  }
 
   // Move the activity
   const activity = a[field][dragSourceDk].splice(dragSourceIdx, 1)[0];
