@@ -293,7 +293,7 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border); }
 
-/* ── Responsive ── */
+/* ── Responsive: Tablet ── */
 @media (max-width: 1100px) {
   .days-grid { grid-template-columns: 1fr; }
   .day-column { border-right: none; border-bottom: 1px solid var(--border); min-height: auto; }
@@ -305,6 +305,155 @@ body {
   .charts-grid { grid-template-columns: 1fr; }
   .chart-card.wide { grid-column: auto; }
   .view-tabs-bar { flex-direction: column; gap: 8px; align-items: flex-start; }
+}
+
+/* ── Responsive: Mobile ── */
+@media (max-width: 680px) {
+  /* Header: stack logo left, controls wrap below */
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+  .header-right {
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+  }
+  .header-right button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  .athlete-tabs {
+    order: -1;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .athlete-tabs::-webkit-scrollbar { display: none; }
+  .athlete-tab { padding: 5px 10px; font-size: 11px; flex-shrink: 0; }
+  .app-title h1 { font-size: 16px; }
+  .app-title h1 span { display: none; }
+  .app-title .logo { width: 30px; height: 30px; font-size: 13px; }
+
+  /* Profile banner: compact */
+  .profile-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .profile-avatar { width: 36px; height: 36px; font-size: 14px; border-radius: 9px; }
+  .profile-details h3 { font-size: 14px; }
+  .profile-details .profile-meta { font-size: 11px; }
+  .profile-races { gap: 8px; }
+  .race-chip { padding: 5px 8px; font-size: 11px; }
+  .race-chip .race-letter { width: 18px; height: 18px; font-size: 9px; }
+  .race-chip .race-text .race-name { font-size: 11px; }
+  .race-chip .race-text .race-meta { font-size: 9px; }
+
+  /* View tabs bar */
+  .view-tabs-bar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 8px 14px;
+    gap: 8px;
+  }
+  .view-tab { padding: 6px 12px; font-size: 12px; }
+  .data-mode { padding: 4px 10px; font-size: 11px; }
+
+  /* Nav bar */
+  .nav-bar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 14px;
+    top: auto;
+    position: relative;
+  }
+  .nav-bar .current-view { font-size: 11px; min-width: auto; }
+  .nav-bar button.nav-btn { width: 30px; height: 30px; font-size: 12px; }
+  .legend { gap: 10px; }
+  .legend-item { font-size: 10px; }
+
+  /* Week blocks */
+  .weeks-container { padding: 12px 10px 40px; gap: 16px; }
+  .week-header { padding: 10px 12px; flex-wrap: wrap; gap: 4px; }
+  .week-header .week-label { font-size: 13px; }
+  .week-header .week-dates { font-size: 10px; }
+
+  /* Goals row */
+  .week-goals { flex-wrap: wrap; padding: 8px 12px; gap: 10px; }
+
+  /* Days: horizontal scroll on mobile instead of stacking */
+  .days-grid {
+    grid-template-columns: repeat(7, minmax(120px, 1fr));
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .days-grid::-webkit-scrollbar { display: none; }
+  .day-column {
+    border-right: 1px solid var(--border);
+    border-bottom: none;
+    min-height: 160px;
+    min-width: 120px;
+    scroll-snap-align: start;
+  }
+  .day-column:last-child { border-right: none; }
+  .day-header { padding: 6px; }
+  .day-header .day-date { font-size: 14px; }
+  .day-body { padding: 5px; gap: 4px; }
+  .activity-card { padding: 6px 7px; }
+  .activity-card .activity-type { font-size: 8px; }
+  .activity-card .activity-qty { font-size: 12px; }
+  .activity-card .activity-notes { font-size: 9px; }
+  .add-activity-btn { padding: 4px; font-size: 14px; }
+
+  /* Summary */
+  .week-summary { grid-template-columns: repeat(4, 1fr); }
+  .summary-stat { padding: 8px 6px; }
+  .summary-stat .stat-label { font-size: 8px; letter-spacing: 0.5px; }
+  .summary-stat .stat-value { font-size: 13px; }
+  .summary-stat .stat-goal { font-size: 8px; }
+
+  /* Load more */
+  .load-more button { padding: 8px 20px; font-size: 12px; }
+
+  /* Analytics */
+  .analytics-controls {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+  .analytics-control-group select { min-width: 100%; font-size: 12px; }
+  .charts-grid { gap: 14px; }
+  .chart-header { padding: 10px 14px; }
+  .chart-header h4 { font-size: 13px; }
+  .chart-body { padding: 10px; min-height: 200px; }
+  .chart-tabs { gap: 2px; }
+  .chart-tab { padding: 3px 8px; font-size: 10px; }
+
+  /* Modal */
+  .modal { width: calc(100vw - 32px); padding: 20px; border-radius: 14px; }
+  .modal h3 { font-size: 14px; }
+
+  /* Auth cards */
+  .auth-card { padding: 28px 20px; width: calc(100vw - 32px); }
+  .auth-card .logo-mark { width: 46px; height: 46px; font-size: 18px; }
+  .auth-card .logo-section h2 { font-size: 20px; }
+  .race-group .race-fields { grid-template-columns: 1fr; }
+}
+
+/* ── Very small phones ── */
+@media (max-width: 380px) {
+  .app-header { padding: 8px 10px; }
+  .header-right button { padding: 5px 8px; font-size: 10px; }
+  .week-summary { grid-template-columns: repeat(2, 1fr); }
+  .days-grid { grid-template-columns: repeat(7, minmax(100px, 1fr)); }
+  .day-column { min-width: 100px; }
 }
 
 @media print {

@@ -13,8 +13,16 @@
 </head>
 <body>
 
+<!-- Loading overlay -->
+<div id="loadingOverlay" style="position:fixed;inset:0;background:var(--bg,#0F1117);display:flex;align-items:center;justify-content:center;z-index:999;">
+  <div style="text-align:center;">
+    <div style="width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#E07B39,#2A9D8F,#6A7BDB);display:inline-flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:14px;">T3</div>
+    <div style="color:#8B90A0;font-family:'DM Sans',sans-serif;font-size:14px;">Loading TriPlan...</div>
+  </div>
+</div>
+
 <!-- SCREEN 1: Admin Login -->
-<div class="auth-screen active" id="screenAdminLogin">
+<div class="auth-screen" id="screenAdminLogin">
   <div class="auth-card">
     <div class="logo-section">
       <div class="logo-mark">T3</div>
@@ -23,7 +31,7 @@
     </div>
     <div class="form-group">
       <label>Admin Password</label>
-      <input type="password" id="adminPassInput" placeholder="Enter admin password" autofocus>
+      <input type="password" id="adminPassInput" placeholder="Enter admin password">
     </div>
     <div class="error-msg" id="adminError"></div>
     <button class="btn btn-primary" onclick="attemptAdminLogin()">Enter</button>
@@ -77,37 +85,16 @@
     <div class="form-group"><label>Full Name</label><input type="text" id="newName" placeholder="Your name"></div>
     <div class="form-group"><label>Birthday</label><input type="date" id="newBirthday"></div>
     <div class="form-group"><label>Set Your Password</label><input type="password" id="newPassword" placeholder="Used for edit access"></div>
-    <div class="race-group a-race">
-      <div class="race-priority">A Race — Top Priority</div>
-      <div class="race-fields">
-        <input type="text" id="newARaceName" placeholder="Race name" class="full-width">
-        <input type="date" id="newARaceDate">
-        <select id="newARaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select>
-      </div>
-    </div>
-    <div class="race-group b-race">
-      <div class="race-priority">B Race — Secondary</div>
-      <div class="race-fields">
-        <input type="text" id="newBRaceName" placeholder="Race name" class="full-width">
-        <input type="date" id="newBRaceDate">
-        <select id="newBRaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select>
-      </div>
-    </div>
-    <div class="race-group c-race">
-      <div class="race-priority">C Race — Fun / Training</div>
-      <div class="race-fields">
-        <input type="text" id="newCRaceName" placeholder="Race name" class="full-width">
-        <input type="date" id="newCRaceDate">
-        <select id="newCRaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select>
-      </div>
-    </div>
+    <div class="race-group a-race"><div class="race-priority">A Race — Top Priority</div><div class="race-fields"><input type="text" id="newARaceName" placeholder="Race name" class="full-width"><input type="date" id="newARaceDate"><select id="newARaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select></div></div>
+    <div class="race-group b-race"><div class="race-priority">B Race — Secondary</div><div class="race-fields"><input type="text" id="newBRaceName" placeholder="Race name" class="full-width"><input type="date" id="newBRaceDate"><select id="newBRaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select></div></div>
+    <div class="race-group c-race"><div class="race-priority">C Race — Fun / Training</div><div class="race-fields"><input type="text" id="newCRaceName" placeholder="Race name" class="full-width"><input type="date" id="newCRaceDate"><select id="newCRaceDist"><option value="">Distance...</option><option value="Sprint">Sprint</option><option value="Olympic">Olympic</option><option value="70.3">70.3</option><option value="140.6">140.6</option><option value="Other">Other</option></select></div></div>
     <div class="error-msg" id="newUserError"></div>
     <button class="btn btn-primary" onclick="createNewUser()">Create Profile</button>
     <button class="back-link" onclick="showScreen('screenUserChoice')">← Back</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ MAIN APP ═══════════════════════════════════════ -->
+<!-- MAIN APP -->
 <div id="mainApp">
   <header class="app-header">
     <div class="app-title">
@@ -120,14 +107,12 @@
       <button onclick="jumpToToday()">Today</button>
       <button onclick="openProfileView()">Profile</button>
       <button onclick="exportData()">Export</button>
-      <button onclick="importData()">Import</button>
       <button class="danger" onclick="switchUser()">Switch User</button>
     </div>
   </header>
 
   <div class="profile-banner" id="profileBanner"></div>
 
-  <!-- View Tabs -->
   <div class="view-tabs-bar">
     <div class="view-tabs">
       <button class="view-tab active" data-view="calendar" onclick="switchMainView('calendar')">📅 Calendar</button>
@@ -163,68 +148,17 @@
   <div id="analyticsView" style="display:none;">
     <div class="analytics-container">
       <div class="analytics-controls">
-        <div class="analytics-control-group">
-          <label>Time Range</label>
-          <select id="analyticsRange" onchange="renderAnalytics()">
-            <option value="4">Last 4 Weeks</option>
-            <option value="8" selected>Last 8 Weeks</option>
-            <option value="12">Last 12 Weeks</option>
-            <option value="16">Last 16 Weeks</option>
-            <option value="26">Last 26 Weeks</option>
-            <option value="52">Last Year</option>
-          </select>
-        </div>
-        <div class="analytics-control-group">
-          <label>Data Source</label>
-          <select id="analyticsDataSource" onchange="renderAnalytics()">
-            <option value="planned">Planned</option>
-            <option value="actual">Actual</option>
-            <option value="both">Planned vs Actual</option>
-          </select>
-        </div>
-        <div class="analytics-control-group">
-          <label>Compare With</label>
-          <select id="analyticsCompare" onchange="renderAnalytics()">
-            <option value="">None</option>
-          </select>
-        </div>
+        <div class="analytics-control-group"><label>Time Range</label><select id="analyticsRange" onchange="renderAnalytics()"><option value="4">Last 4 Weeks</option><option value="8" selected>Last 8 Weeks</option><option value="12">Last 12 Weeks</option><option value="16">Last 16 Weeks</option><option value="26">Last 26 Weeks</option><option value="52">Last Year</option></select></div>
+        <div class="analytics-control-group"><label>Data Source</label><select id="analyticsDataSource" onchange="renderAnalytics()"><option value="planned">Planned</option><option value="actual">Actual</option><option value="both">Planned vs Actual</option></select></div>
+        <div class="analytics-control-group"><label>Compare With</label><select id="analyticsCompare" onchange="renderAnalytics()"><option value="">None</option></select></div>
       </div>
-
       <div class="charts-grid">
-        <div class="chart-card wide">
-          <div class="chart-header">
-            <h4>Weekly Volume</h4>
-            <div class="chart-tabs" id="weeklyChartTabs">
-              <button class="chart-tab active" onclick="switchWeeklyChart('run')">Run</button>
-              <button class="chart-tab" onclick="switchWeeklyChart('bike')">Bike</button>
-              <button class="chart-tab" onclick="switchWeeklyChart('swim')">Swim</button>
-            </div>
-          </div>
-          <div class="chart-body"><canvas id="chartWeekly"></canvas></div>
-        </div>
-
-        <div class="chart-card">
-          <div class="chart-header"><h4>Monthly Volume</h4></div>
-          <div class="chart-body"><canvas id="chartMonthly"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header"><h4>Discipline Split</h4></div>
-          <div class="chart-body donut-body"><canvas id="chartDonut"></canvas></div>
-        </div>
-
-        <div class="chart-card">
-          <div class="chart-header"><h4>Cumulative Mileage</h4></div>
-          <div class="chart-body"><canvas id="chartCumulative"></canvas></div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-header"><h4>Planned vs Actual</h4></div>
-          <div class="chart-body"><canvas id="chartPvA"></canvas></div>
-        </div>
-
-        <div class="chart-card wide">
-          <div class="chart-header"><h4>Training Heatmap</h4></div>
-          <div class="chart-body heatmap-body" id="heatmapContainer"></div>
-        </div>
+        <div class="chart-card wide"><div class="chart-header"><h4>Weekly Volume</h4><div class="chart-tabs" id="weeklyChartTabs"><button class="chart-tab active" onclick="switchWeeklyChart('run')">Run</button><button class="chart-tab" onclick="switchWeeklyChart('bike')">Bike</button><button class="chart-tab" onclick="switchWeeklyChart('swim')">Swim</button></div></div><div class="chart-body"><canvas id="chartWeekly"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><h4>Monthly Volume</h4></div><div class="chart-body"><canvas id="chartMonthly"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><h4>Discipline Split</h4></div><div class="chart-body donut-body"><canvas id="chartDonut"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><h4>Cumulative Mileage</h4></div><div class="chart-body"><canvas id="chartCumulative"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><h4>Planned vs Actual</h4></div><div class="chart-body"><canvas id="chartPvA"></canvas></div></div>
+        <div class="chart-card wide"><div class="chart-header"><h4>Training Heatmap</h4></div><div class="chart-body heatmap-body" id="heatmapContainer"></div></div>
       </div>
     </div>
   </div>
@@ -234,26 +168,10 @@
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Add Activity</h3>
-    <div class="form-group">
-      <label>Activity Type</label>
-      <div class="type-selector">
-        <button class="type-btn run" data-type="run" onclick="selectType('run')">🏃 Run</button>
-        <button class="type-btn bike" data-type="bike" onclick="selectType('bike')">🚴 Bike</button>
-        <button class="type-btn swim" data-type="swim" onclick="selectType('swim')">🏊 Swim</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label id="qtyLabel">Distance</label>
-      <input type="number" id="activityQty" step="0.1" min="0" placeholder="0">
-    </div>
-    <div class="form-group">
-      <label>Notes / Description</label>
-      <textarea id="activityNotes" placeholder="e.g., Tempo run, Zone 2 ride, drill sets..."></textarea>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-save" onclick="saveActivity()">Save</button>
-    </div>
+    <div class="form-group"><label>Activity Type</label><div class="type-selector"><button class="type-btn run" data-type="run" onclick="selectType('run')">🏃 Run</button><button class="type-btn bike" data-type="bike" onclick="selectType('bike')">🚴 Bike</button><button class="type-btn swim" data-type="swim" onclick="selectType('swim')">🏊 Swim</button></div></div>
+    <div class="form-group"><label id="qtyLabel">Distance</label><input type="number" id="activityQty" step="0.1" min="0" placeholder="0"></div>
+    <div class="form-group"><label>Notes / Description</label><textarea id="activityNotes" placeholder="e.g., Tempo run, Zone 2 ride, drill sets..."></textarea></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveActivity()">Save</button></div>
   </div>
 </div>
 
@@ -261,14 +179,37 @@
   <div class="modal" style="width:460px;max-height:90vh;overflow-y:auto;">
     <h3>Athlete Profile</h3>
     <div id="profileModalContent"></div>
-    <div class="modal-actions" style="margin-top:16px;">
-      <button class="btn-cancel" onclick="closeProfileModal()">Close</button>
-    </div>
+    <div class="modal-actions" style="margin-top:16px;"><button class="btn-cancel" onclick="closeProfileModal()">Close</button></div>
   </div>
 </div>
 
-<input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+<!-- Firebase SDK (CDN, modular via browser ESM) -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
+  import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteField, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyCNeOP4JHRAtlrWe8esd9FyuNqvvy-v2Ys",
+    authDomain: "triplan-331d9.firebaseapp.com",
+    projectId: "triplan-331d9",
+    storageBucket: "triplan-331d9.firebasestorage.app",
+    messagingSenderId: "887151269615",
+    appId: "1:887151269615:web:7fed988d752a591e91ad1a",
+    measurementId: "G-0T6Q3ZMK7B"
+  };
+
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getFirestore(fbApp);
+
+  // Expose Firebase to global scope for non-module scripts
+  window.FB = { db, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteField, onSnapshot };
+
+  // Signal that Firebase is ready
+  window.firebaseReady = true;
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<!-- App scripts (non-module, use window.FB) -->
 <script src="js/app.js"></script>
 <script src="js/strava.js"></script>
 <script src="js/analytics.js"></script>

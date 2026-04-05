@@ -27,10 +27,6 @@ triplan/
 └── README.md
 ```
 
-## Quick Start
-
-Open `index.html` in any browser. No build tools required.
-
 ## Data Notes
 
 - All data stored in browser localStorage (per-device)
