@@ -472,9 +472,11 @@ function buildDays(sunday, editing) {
     let cards = '';
     dayActs.forEach((act, idx) => {
       const u = act.type === 'swim' ? 'yd' : 'mi';
-      cards += `<div class="activity-card ${act.type} ${isActual?'actual-data':''}">${editing?`<button class="remove-activity" onclick="removeActivity('${dk}',${idx})">×</button>`:''}<div class="activity-type">${act.type}</div><div class="activity-qty">${act.qty}<span class="unit-label"> ${u}</span></div>${act.notes?`<div class="activity-notes">${escapeHtml(act.notes)}</div>`:''}</div>`;
+      const dragAttr = editing ? `draggable="true" ondragstart="onDragStart(event,'${dk}',${idx})"` : '';
+      cards += `<div class="activity-card ${act.type} ${isActual?'actual-data':''}" ${dragAttr}>${editing?`<button class="remove-activity" onclick="removeActivity('${dk}',${idx})">×</button>`:''}<div class="activity-type">${act.type}</div><div class="activity-qty">${act.qty}<span class="unit-label"> ${u}</span></div>${act.notes?`<div class="activity-notes">${escapeHtml(act.notes)}</div>`:''}</div>`;
     });
-    html += `<div class="day-column"><div class="day-header ${dk===tk?'today':''}">${DAYS[i]}<span class="day-date">${d.getDate()}</span></div><div class="day-body">${cards}<button class="add-activity-btn ${editing?'':'disabled'}" onclick="${editing?`openModal('${dk}')`:''}" >+</button></div></div>`;
+    const dropAttr = editing ? `ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${dk}')"` : '';
+    html += `<div class="day-column"><div class="day-header ${dk===tk?'today':''}">${DAYS[i]}<span class="day-date">${d.getDate()}</span></div><div class="day-body" ${dropAttr}>${cards}<button class="add-activity-btn ${editing?'':'disabled'}" onclick="${editing?`openModal('${dk}')`:''}" >+</button></div></div>`;
   }
   return html;
 }
@@ -489,6 +491,168 @@ function buildSummary(sunday, wk) {
 }
 
 // ══════════════════════════════════════════
+// DRAG AND DROP
+// ══════════════════════════════════════════
+let dragSourceDk = null;
+let dragSourceIdx = null;
+
+function onDragStart(e, dk, idx) {
+  dragSourceDk = dk; dragSourceIdx = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', ''); // Required for Firefox
+  e.target.closest('.activity-card').classList.add('dragging');
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drop-target');
+}
+
+function onDragLeave(e) {
+  e.currentTarget.classList.remove('drop-target');
+}
+
+async function onDrop(e, targetDk) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drop-target');
+  if (dragSourceDk === null || dragSourceIdx === null) return;
+  if (dragSourceDk === targetDk) { dragSourceDk = null; dragSourceIdx = null; return; }
+
+  const a = currentAthlete();
+  const field = currentDataMode === 'actual' ? 'actuals' : 'activities';
+  if (!a[field] || !a[field][dragSourceDk] || !a[field][dragSourceDk][dragSourceIdx]) return;
+
+  // Move the activity
+  const activity = a[field][dragSourceDk].splice(dragSourceIdx, 1)[0];
+  if (a[field][dragSourceDk].length === 0) delete a[field][dragSourceDk];
+  if (!a[field][targetDk]) a[field][targetDk] = [];
+  a[field][targetDk].push(activity);
+
+  await saveAthlete(a);
+  showToast(`Moved ${activity.type} to ${formatDateKey(targetDk)}`);
+  render();
+  dragSourceDk = null; dragSourceIdx = null;
+}
+
+function formatDateKey(dk) {
+  const d = new Date(dk + 'T00:00:00');
+  return `${DAYS[d.getDay()]} ${formatDate(d)}`;
+}
+
+// ══════════════════════════════════════════
+// TOAST NOTIFICATIONS
+// ══════════════════════════════════════════
+function showToast(msg) {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('visible'));
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => toast.remove(), 300);
+  }, 2500);
+}
+
+// ══════════════════════════════════════════
+// ACTIVITY TEMPLATES
+// ══════════════════════════════════════════
+const TEMPLATES_KEY = 'triplan_templates';
+
+function loadTemplates() {
+  try { return JSON.parse(localStorage.getItem(TEMPLATES_KEY)) || []; } catch(e) { return []; }
+}
+
+function saveTemplates(templates) {
+  localStorage.setItem(TEMPLATES_KEY, JSON.stringify(templates));
+}
+
+function addTemplate(type, qty, notes) {
+  const templates = loadTemplates();
+  // Don't duplicate
+  const exists = templates.some(t => t.type === type && t.qty === qty && t.notes === notes);
+  if (exists) return;
+  templates.unshift({ type, qty, notes, usedAt: Date.now() });
+  // Keep max 20
+  if (templates.length > 20) templates.length = 20;
+  saveTemplates(templates);
+}
+
+function getRecentActivities() {
+  // Pull unique recent activities from the current athlete
+  const a = currentAthlete(); if (!a) return [];
+  const field = currentDataMode === 'actual' ? 'actuals' : 'activities';
+  const acts = a[field] || {};
+  const seen = new Set();
+  const recent = [];
+
+  // Get dates sorted descending
+  const dates = Object.keys(acts).sort().reverse();
+  for (const dk of dates) {
+    for (const act of (acts[dk] || [])) {
+      const key = `${act.type}|${act.qty}|${act.notes || ''}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        recent.push({ type: act.type, qty: act.qty, notes: act.notes || '' });
+        if (recent.length >= 10) return recent;
+      }
+    }
+  }
+  return recent;
+}
+
+function buildTemplatesList() {
+  const saved = loadTemplates();
+  const recent = getRecentActivities();
+
+  // Merge, dedup, saved first
+  const all = [];
+  const seen = new Set();
+  for (const t of saved) {
+    const key = `${t.type}|${t.qty}|${t.notes}`;
+    if (!seen.has(key)) { seen.add(key); all.push({ ...t, source: 'saved' }); }
+  }
+  for (const t of recent) {
+    const key = `${t.type}|${t.qty}|${t.notes}`;
+    if (!seen.has(key)) { seen.add(key); all.push({ ...t, source: 'recent' }); }
+  }
+  return all.slice(0, 12);
+}
+
+function renderTemplatesInModal() {
+  const container = document.getElementById('templatesList');
+  if (!container) return;
+  const templates = buildTemplatesList();
+  if (templates.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-dim);font-size:11px;padding:4px 0;">No templates yet. Your recent activities will appear here.</div>';
+    return;
+  }
+  container.innerHTML = templates.map((t, i) => {
+    const u = t.type === 'swim' ? 'yd' : 'mi';
+    const label = t.notes ? `${t.notes.slice(0, 30)}${t.notes.length > 30 ? '…' : ''}` : `${t.type} ${t.qty}${u}`;
+    const emoji = t.type === 'run' ? '🏃' : t.type === 'bike' ? '🚴' : '🏊';
+    return `<button class="template-chip ${t.type}" onclick="applyTemplate(${i})" title="${escapeHtml(t.notes || t.type + ' ' + t.qty + u)}">${emoji} <span class="template-label">${escapeHtml(label)}</span> <span class="template-qty">${t.qty}${u}</span></button>`;
+  }).join('');
+}
+
+function applyTemplate(idx) {
+  const templates = buildTemplatesList();
+  const t = templates[idx]; if (!t) return;
+  selectedType = t.type;
+  updateTypeButtons(); updateQtyLabel();
+  document.getElementById('activityQty').value = t.qty;
+  document.getElementById('activityNotes').value = t.notes || '';
+}
+
+// ══════════════════════════════════════════
 // ACTIVITY MODAL
 // ══════════════════════════════════════════
 function openModal(dk) {
@@ -500,6 +664,10 @@ function openModal(dk) {
   document.getElementById('modalTitle').textContent = `Add ${currentDataMode==='actual'?'Actual':'Planned'} Activity — ${DAYS[d.getDay()]} ${formatDate(d)}`;
   document.getElementById('modalOverlay').classList.add('visible');
   updateQtyLabel();
+  renderTemplatesInModal();
+  // Show/hide save template checkbox
+  const cb = document.getElementById('saveAsTemplate');
+  if (cb) cb.checked = false;
   setTimeout(() => document.getElementById('activityQty').focus(), 100);
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('visible'); }
@@ -515,8 +683,17 @@ async function saveActivity() {
   const field = currentDataMode === 'actual' ? 'actuals' : 'activities';
   if (!a[field]) a[field] = {};
   if (!a[field][modalDateKey]) a[field][modalDateKey] = [];
-  a[field][modalDateKey].push({ type: selectedType, qty: selectedType === 'swim' ? Math.round(qty) : parseFloat(qty.toFixed(2)), notes });
+  const finalQty = selectedType === 'swim' ? Math.round(qty) : parseFloat(qty.toFixed(2));
+  a[field][modalDateKey].push({ type: selectedType, qty: finalQty, notes });
   await saveAthlete(a);
+
+  // Save as template if checkbox is checked
+  const cb = document.getElementById('saveAsTemplate');
+  if (cb && cb.checked) {
+    addTemplate(selectedType, finalQty, notes);
+  }
+  // Always track in recent (templates auto-populate from recent)
+  showToast(`${selectedType.charAt(0).toUpperCase() + selectedType.slice(1)} added ✓`);
   closeModal(); render();
 }
 

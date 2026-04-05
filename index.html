@@ -168,9 +168,11 @@
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h3 id="modalTitle">Add Activity</h3>
+    <div class="form-group"><label>Quick Templates</label><div id="templatesList" class="templates-list"></div></div>
     <div class="form-group"><label>Activity Type</label><div class="type-selector"><button class="type-btn run" data-type="run" onclick="selectType('run')">🏃 Run</button><button class="type-btn bike" data-type="bike" onclick="selectType('bike')">🚴 Bike</button><button class="type-btn swim" data-type="swim" onclick="selectType('swim')">🏊 Swim</button></div></div>
     <div class="form-group"><label id="qtyLabel">Distance</label><input type="number" id="activityQty" step="0.1" min="0" placeholder="0"></div>
     <div class="form-group"><label>Notes / Description</label><textarea id="activityNotes" placeholder="e.g., Tempo run, Zone 2 ride, drill sets..."></textarea></div>
+    <div class="form-group" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="saveAsTemplate" style="width:auto;"><label for="saveAsTemplate" style="margin:0;text-transform:none;letter-spacing:0;font-size:12px;cursor:pointer;">Save as template for quick reuse</label></div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveActivity()">Save</button></div>
   </div>
 </div>
