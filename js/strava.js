@@ -2,8 +2,8 @@
    TriPlan — Strava Integration (Firebase Edition)
    ══════════════════════════════════════════ */
 
-const STRAVA_CLIENT_ID = '218965';  // Your Strava API Client ID
-const STRAVA_PROXY_URL = 'https://strava-proxy.edwardmercer2001.workers.dev'; // Your Cloudflare Worker URL (e.g., https://strava-proxy.yourname.workers.dev)
+const STRAVA_CLIENT_ID = '218965'; 
+const STRAVA_PROXY_URL = 'https://strava-proxy.edwardmercer2001.workers.dev'; 
 const STRAVA_REDIRECT_URI = window.location.origin + window.location.pathname;
 const STRAVA_SCOPE = 'read,activity:read_all';
 

@@ -84,6 +84,8 @@ body {
 .user-select-card .user-info { flex: 1; }
 .user-select-card .user-info .name { font-weight: 600; font-size: 14px; }
 .user-select-card .user-info .meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.reset-pw-btn { background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px 8px; border-radius: 6px; opacity: 0.4; transition: all 0.15s; flex-shrink: 0; }
+.reset-pw-btn:hover { opacity: 1; background: var(--surface-3); }
 
 /* ══════════════════════════════════════════ MAIN APP ══════════════════════════════════════════ */
 #mainApp { display: none; }

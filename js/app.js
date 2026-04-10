@@ -303,7 +303,7 @@ async function showReturnerScreen() {
     const aRace = a.races?.a?.name ? `A: ${a.races.a.name}` : '';
     const card = document.createElement('div');
     card.className = 'user-select-card';
-    card.innerHTML = `<div class="user-avatar">${initials}</div><div class="user-info"><div class="name">${escapeHtml(a.name)}</div><div class="meta">${age ? 'Age '+age : ''} ${aRace ? '· '+aRace : ''}</div></div>`;
+    card.innerHTML = `<div class="user-avatar">${initials}</div><div class="user-info"><div class="name">${escapeHtml(a.name)}</div><div class="meta">${age ? 'Age '+age : ''} ${aRace ? '· '+aRace : ''}</div></div><button class="reset-pw-btn" onclick="event.stopPropagation();resetUserPassword('${a.id}')" title="Reset password">🔑</button>`;
     card.onclick = () => {
       document.querySelectorAll('.user-select-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
@@ -446,12 +446,37 @@ function openProfileView() {
   let html = `<div style="margin-bottom:14px;"><div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Name</div><div style="font-size:15px;font-weight:600;">${escapeHtml(a.name)}</div></div>
     <div style="display:flex;gap:20px;margin-bottom:16px;"><div><div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Age</div><div style="font-size:15px;font-weight:600;">${age}</div></div><div><div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Birthday</div><div style="font-size:15px;font-weight:600;">${a.birthday?formatRaceDate(a.birthday):'—'}</div></div></div>`;
 
-  [['a','A Race','run-primary'],['b','B Race','bike-primary'],['c','C Race','swim-primary']].forEach(([key,label,color]) => {
-    const r = a.races?.[key]; if (r && r.name) {
-      const du = daysUntil(r.date); const duStr = du!==null?(du>0?`${du} days away`:du===0?'Race day!':`${Math.abs(du)} days ago`):'';
-      html += `<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--${color});margin-bottom:4px;">${label}</div><div style="font-weight:600;">${escapeHtml(r.name)}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${r.distance||''} · ${formatRaceDate(r.date)} ${duStr?'· '+duStr:''}</div></div>`;
-    }
-  });
+  const raceColors = {a: 'run-primary', b: 'bike-primary', c: 'swim-primary'};
+  const raceLabels = {a: 'A Race — Top Priority', b: 'B Race — Secondary', c: 'C Race — Fun / Training'};
+  const distOptions = ['','Sprint','Olympic','70.3','140.6','Other'];
+
+  if (hasEditAccess()) {
+    // Editable race forms
+    html += '<div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;"><div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Target Races</div>';
+    ['a','b','c'].forEach(key => {
+      const r = a.races?.[key] || {};
+      const color = raceColors[key];
+      html += `<div class="race-group ${key}-race" style="margin-bottom:10px;">
+        <div class="race-priority">${raceLabels[key]}</div>
+        <div class="race-fields">
+          <input type="text" id="editRace${key}Name" value="${escapeHtml(r.name||'')}" placeholder="Race name" class="full-width">
+          <input type="date" id="editRace${key}Date" value="${r.date||''}">
+          <select id="editRace${key}Dist">${distOptions.map(d => `<option value="${d}" ${d===r.distance?'selected':''}>${d||'Distance...'}</option>`).join('')}</select>
+        </div>
+      </div>`;
+    });
+    html += '<button onclick="saveRaces()" style="background:var(--accent);border:1px solid var(--accent);color:#fff;padding:8px 16px;border-radius:7px;font-family:\'DM Sans\',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;">Save Races</button>';
+    html += '<div id="racesSaveStatus" style="color:var(--success);font-size:12px;min-height:18px;margin-top:6px;"></div>';
+    html += '</div>';
+  } else {
+    // Read-only race display
+    [['a','A Race','run-primary'],['b','B Race','bike-primary'],['c','C Race','swim-primary']].forEach(([key,label,color]) => {
+      const r = a.races?.[key]; if (r && r.name) {
+        const du = daysUntil(r.date); const duStr = du!==null?(du>0?`${du} days away`:du===0?'Race day!':`${Math.abs(du)} days ago`):'';
+        html += `<div style="background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--${color});margin-bottom:4px;">${label}</div><div style="font-weight:600;">${escapeHtml(r.name)}</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${r.distance||''} · ${formatRaceDate(r.date)} ${duStr?'· '+duStr:''}</div></div>`;
+      }
+    });
+  }
 
   // Strava
   if (typeof buildStravaProfileSection === 'function') html += buildStravaProfileSection(a);
@@ -502,8 +527,40 @@ async function setWeekStartDay(day) {
   a.weekStartDay = day;
   await saveAthlete(a);
   showToast(`Week now starts on ${day === 1 ? 'Monday' : 'Sunday'}`);
-  openProfileView(); // Refresh modal to update button states
+  openProfileView();
   render();
+}
+
+async function saveRaces() {
+  const a = currentAthlete();
+  if (!a.races) a.races = {};
+  ['a','b','c'].forEach(key => {
+    a.races[key] = {
+      name: document.getElementById(`editRace${key}Name`).value.trim(),
+      date: document.getElementById(`editRace${key}Date`).value,
+      distance: document.getElementById(`editRace${key}Dist`).value
+    };
+  });
+  await saveAthlete(a);
+  renderProfileBanner();
+  const status = document.getElementById('racesSaveStatus');
+  if (status) status.textContent = 'Races updated ✓';
+  setTimeout(() => { if (status) status.textContent = ''; }, 2500);
+  showToast('Races updated ✓');
+}
+
+// Reset another user's password (from Returner screen, using birthday)
+async function resetUserPassword(athleteId) {
+  const a = athleteById(athleteId);
+  if (!a) return;
+  const birthday = prompt(`To reset the password for ${a.name}, enter their birthday (YYYY-MM-DD):`);
+  if (!birthday) return;
+  if (birthday !== a.birthday) { alert('Birthday does not match. Password not changed.'); return; }
+  const newPw = prompt('Enter the new password:');
+  if (!newPw) return;
+  a.passwordHash = simpleHash(newPw);
+  await saveAthlete(a);
+  alert(`Password for ${a.name} has been reset.`);
 }
 
 // ══════════════════════════════════════════
