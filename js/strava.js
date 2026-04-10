@@ -7,6 +7,7 @@ const STRAVA_PROXY_URL = 'https://strava-proxy.edwardmercer2001.workers.dev';
 const STRAVA_REDIRECT_URI = window.location.origin + window.location.pathname;
 const STRAVA_SCOPE = 'read,activity:read_all';
 
+
 function isStravaConfigured() { return STRAVA_CLIENT_ID && STRAVA_PROXY_URL; }
 
 function buildStravaProfileSection(a) {

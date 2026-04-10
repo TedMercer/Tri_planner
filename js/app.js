@@ -611,11 +611,20 @@ function buildDays(weekStart, editing) {
   for (let i = 0; i < 7; i++) {
     const d = new Date(weekStart); d.setDate(weekStart.getDate() + i); const dk = dateKey(d);
     const dayActs = acts[dk] || [];
+    const count = dayActs.length;
     let cards = '';
     dayActs.forEach((act, idx) => {
       const u = act.type === 'swim' ? 'yd' : 'mi';
       const dragAttr = editing ? `draggable="true" ondragstart="onDragStart(event,'${dk}',${idx})" ondragend="onDragEnd(event)"` : '';
-      cards += `<div class="activity-card ${act.type} ${isActual?'actual-data':''}" ${dragAttr}>${editing?`<button class="remove-activity" onclick="removeActivity('${dk}',${idx})">×</button>`:''}<div class="activity-type">${act.type}</div><div class="activity-qty">${act.qty}<span class="unit-label"> ${u}</span></div>${act.notes?`<div class="activity-notes">${escapeHtml(act.notes)}</div>`:''}</div>`;
+      const ctxAttr = editing ? `oncontextmenu="onActivityContext(event,'${dk}',${idx})"` : '';
+      let reorderBtns = '';
+      if (editing && count > 1) {
+        reorderBtns = '<div class="reorder-btns">';
+        if (idx > 0) reorderBtns += `<button class="reorder-btn" onclick="event.stopPropagation();reorderActivity('${dk}',${idx},-1)" title="Move up">▲</button>`;
+        if (idx < count - 1) reorderBtns += `<button class="reorder-btn" onclick="event.stopPropagation();reorderActivity('${dk}',${idx},1)" title="Move down">▼</button>`;
+        reorderBtns += '</div>';
+      }
+      cards += `<div class="activity-card ${act.type} ${isActual?'actual-data':''}" ${dragAttr} ${ctxAttr}>${editing?`<button class="remove-activity" onclick="removeActivity('${dk}',${idx})">×</button>`:''}${reorderBtns}<div class="activity-type">${act.type}</div><div class="activity-qty">${act.qty}<span class="unit-label"> ${u}</span></div>${act.notes?`<div class="activity-notes">${escapeHtml(act.notes)}</div>`:''}</div>`;
     });
     const dropAttr = editing ? `ondragenter="onDragEnter(event)" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event,'${dk}')"` : '';
     html += `<div class="day-column"><div class="day-header ${dk===tk?'today':''}">${dayNames[i]}<span class="day-date">${d.getDate()}</span></div><div class="day-body" ${dropAttr}>${cards}<button class="add-activity-btn ${editing?'':'disabled'}" onclick="${editing?`openModal('${dk}')`:''}" >+</button></div></div>`;
@@ -891,6 +900,160 @@ async function removeActivity(dk, idx) {
 }
 
 // ══════════════════════════════════════════
+// REORDER ACTIVITIES WITHIN A DAY
+// ══════════════════════════════════════════
+async function reorderActivity(dk, idx, direction) {
+  if (!hasEditAccess()) return;
+  const a = currentAthlete();
+  const field = currentDataMode === 'actual' ? 'actuals' : 'activities';
+  const arr = a[field]?.[dk];
+  if (!arr) return;
+  const newIdx = idx + direction;
+  if (newIdx < 0 || newIdx >= arr.length) return;
+  // Swap
+  const temp = arr[idx];
+  arr[idx] = arr[newIdx];
+  arr[newIdx] = temp;
+  await saveAthlete(a);
+  render();
+}
+
+// ══════════════════════════════════════════
+// CONTEXT MENU (Right-click on activity)
+// ══════════════════════════════════════════
+let activeContextMenu = null;
+
+function onActivityContext(e, dk, idx) {
+  e.preventDefault();
+  closeContextMenu();
+
+  const a = currentAthlete();
+  const field = currentDataMode === 'actual' ? 'actuals' : 'activities';
+  const act = a[field]?.[dk]?.[idx];
+  if (!act) return;
+  const arr = a[field][dk];
+
+  const menu = document.createElement('div');
+  menu.className = 'context-menu';
+
+  let items = '';
+  items += `<button class="ctx-item" onclick="openEditModal('${dk}',${idx})">✏️ Edit Activity</button>`;
+  if (idx > 0) items += `<button class="ctx-item" onclick="reorderActivity('${dk}',${idx},-1);closeContextMenu()">▲ Move Up</button>`;
+  if (idx < arr.length - 1) items += `<button class="ctx-item" onclick="reorderActivity('${dk}',${idx},1);closeContextMenu()">▼ Move Down</button>`;
+  items += `<div class="ctx-divider"></div>`;
+  items += `<button class="ctx-item ctx-danger" onclick="removeActivity('${dk}',${idx});closeContextMenu()">🗑 Delete</button>`;
+
+  menu.innerHTML = items;
+  document.body.appendChild(menu);
+
+  // Position near the click
+  const x = Math.min(e.clientX, window.innerWidth - 180);
+  const y = Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 10);
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+
+  activeContextMenu = menu;
+  // Close on next click anywhere
+  setTimeout(() => document.addEventListener('click', closeContextMenu, { once: true }), 10);
+}
+
+function closeContextMenu() {
+  if (activeContextMenu) {
+    activeContextMenu.remove();
+    activeContextMenu = null;
+  }
+}
+
+// ══════════════════════════════════════════
+// EDIT ACTIVITY MODAL
+// ══════════════════════════════════════════
+let editingDk = null;
+let editingIdx = null;
+
+function openEditModal(dk, idx) {
+  closeContextMenu();
+  if (!hasEditAccess()) return;
+  const a = currentAthlete();
+  const field = currentDataMode === 'actual' ? 'actuals' : 'activities';
+  const act = a[field]?.[dk]?.[idx];
+  if (!act) return;
+
+  editingDk = dk;
+  editingIdx = idx;
+  selectedType = act.type;
+  updateTypeButtons();
+  updateQtyLabel();
+  document.getElementById('activityQty').value = act.qty;
+  document.getElementById('activityNotes').value = act.notes || '';
+
+  const d = new Date(dk + 'T00:00:00');
+  document.getElementById('modalTitle').textContent = `Edit Activity — ${DAYS[d.getDay()]} ${formatDate(d)}`;
+
+  // Change save button to update
+  const saveBtn = document.querySelector('#modalOverlay .btn-save');
+  if (saveBtn) {
+    saveBtn.textContent = 'Update';
+    saveBtn.setAttribute('onclick', 'updateActivity()');
+  }
+
+  // Hide templates and save-as-template when editing
+  const tplSection = document.getElementById('templatesList');
+  if (tplSection) tplSection.parentElement.style.display = 'none';
+  const cb = document.getElementById('saveAsTemplate');
+  if (cb) cb.parentElement.style.display = 'none';
+
+  document.getElementById('modalOverlay').classList.add('visible');
+  setTimeout(() => document.getElementById('activityQty').focus(), 100);
+}
+
+async function updateActivity() {
+  if (editingDk === null || editingIdx === null) return;
+  const qty = parseFloat(document.getElementById('activityQty').value);
+  const notes = document.getElementById('activityNotes').value.trim();
+  if (!qty || qty <= 0) { document.getElementById('activityQty').style.borderColor = 'var(--danger)'; setTimeout(()=>document.getElementById('activityQty').style.borderColor='',1500); return; }
+
+  const a = currentAthlete();
+  const field = currentDataMode === 'actual' ? 'actuals' : 'activities';
+  const act = a[field]?.[editingDk]?.[editingIdx];
+  if (!act) return;
+
+  act.type = selectedType;
+  act.qty = selectedType === 'swim' ? Math.round(qty) : parseFloat(qty.toFixed(2));
+  act.notes = notes;
+
+  await saveAthlete(a);
+  showToast('Activity updated ✓');
+  resetModalToAddMode();
+  closeModal();
+  render();
+  editingDk = null;
+  editingIdx = null;
+}
+
+function resetModalToAddMode() {
+  const saveBtn = document.querySelector('#modalOverlay .btn-save');
+  if (saveBtn) {
+    saveBtn.textContent = 'Save';
+    saveBtn.setAttribute('onclick', 'saveActivity()');
+  }
+  const tplSection = document.getElementById('templatesList');
+  if (tplSection) tplSection.parentElement.style.display = '';
+  const cb = document.getElementById('saveAsTemplate');
+  if (cb) cb.parentElement.style.display = '';
+}
+
+// Override closeModal to also reset edit state
+const _originalCloseModal = closeModal;
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('visible');
+  if (editingDk !== null) {
+    resetModalToAddMode();
+    editingDk = null;
+    editingIdx = null;
+  }
+}
+
+// ══════════════════════════════════════════
 // GOALS
 // ══════════════════════════════════════════
 function toggleGoals(wk) { const el = document.getElementById(`goals-${wk}`); if (el) el.classList.toggle('visible'); }
@@ -935,7 +1098,7 @@ document.getElementById('returnerPassInput').addEventListener('keydown', e => { 
 document.getElementById('btnReturner').addEventListener('click', showReturnerScreen);
 
 document.addEventListener('keydown', e => {
-  if (document.getElementById('modalOverlay').classList.contains('visible')) { if (e.key==='Escape') closeModal(); if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); saveActivity(); } return; }
+  if (document.getElementById('modalOverlay').classList.contains('visible')) { if (e.key==='Escape') closeModal(); if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); if (editingDk !== null) updateActivity(); else saveActivity(); } return; }
   if (document.getElementById('profileModal').classList.contains('visible')) { if (e.key==='Escape') closeProfileModal(); return; }
   if (!document.getElementById('mainApp').classList.contains('active')) return;
   if (e.key==='ArrowLeft') shiftView(-1); if (e.key==='ArrowRight') shiftView(1);
