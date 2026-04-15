@@ -221,16 +221,19 @@ function switchMainView(view) {
   document.querySelectorAll('.view-tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
   document.getElementById('calendarView').style.display = view === 'calendar' ? '' : 'none';
   document.getElementById('analyticsView').style.display = view === 'analytics' ? '' : 'none';
+  document.getElementById('stackupView').style.display = view === 'stackup' ? '' : 'none';
   document.getElementById('guideView').style.display = view === 'guide' ? '' : 'none';
-  // Hide planned/actual toggle on guide
   const toggle = document.getElementById('dataModeToggle');
-  if (toggle) toggle.style.display = view === 'guide' ? 'none' : '';
+  if (toggle) toggle.style.display = (view === 'guide' || view === 'stackup') ? 'none' : '';
   if (view === 'analytics') {
     const wsd = getWeekStartDay();
     const sel = document.getElementById('analyticsWeekStart');
     if (sel) sel.value = wsd;
-    populateCompareDropdown();
     renderAnalytics();
+  }
+  if (view === 'stackup') {
+    populateStackUpDropdown();
+    renderStackUp();
   }
 }
 

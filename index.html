@@ -117,6 +117,7 @@
     <div class="view-tabs">
       <button class="view-tab active" data-view="calendar" onclick="switchMainView('calendar')">📅 Calendar</button>
       <button class="view-tab" data-view="analytics" onclick="switchMainView('analytics')">📊 Analytics</button>
+      <button class="view-tab" data-view="stackup" onclick="switchMainView('stackup')">🏆 StackUp</button>
       <button class="view-tab" data-view="guide" onclick="switchMainView('guide')">📖 User Guide</button>
     </div>
     <div class="data-mode-toggle" id="dataModeToggle">
@@ -151,16 +152,37 @@
       <div class="analytics-controls">
         <div class="analytics-control-group"><label>Time Range</label><select id="analyticsRange" onchange="renderAnalytics()"><option value="4">Last 4 Weeks</option><option value="8" selected>Last 8 Weeks</option><option value="12">Last 12 Weeks</option><option value="16">Last 16 Weeks</option><option value="26">Last 26 Weeks</option><option value="52">Last Year</option></select></div>
         <div class="analytics-control-group"><label>Data Source</label><select id="analyticsDataSource" onchange="renderAnalytics()"><option value="planned">Planned</option><option value="actual">Actual</option><option value="both">Planned vs Actual</option></select></div>
-        <div class="analytics-control-group"><label>Compare With</label><select id="analyticsCompare" onchange="renderAnalytics()"><option value="">None</option></select></div>
         <div class="analytics-control-group"><label>Week Starts</label><select id="analyticsWeekStart" onchange="changeWeekStartFromAnalytics()"><option value="0">Sunday</option><option value="1">Monday</option></select></div>
       </div>
       <div class="charts-grid">
+        <div class="chart-card wide"><div class="chart-header"><h4>Performance Management Chart</h4><div style="font-size:10px;color:var(--text-dim);">Fitness · Fatigue · Form</div></div><div class="chart-body" style="min-height:280px;"><canvas id="chartPMC"></canvas></div></div>
         <div class="chart-card wide"><div class="chart-header"><h4>Weekly Volume</h4><div class="chart-tabs" id="weeklyChartTabs"><button class="chart-tab active" onclick="switchWeeklyChart('run')">Run</button><button class="chart-tab" onclick="switchWeeklyChart('bike')">Bike</button><button class="chart-tab" onclick="switchWeeklyChart('swim')">Swim</button></div></div><div class="chart-body"><canvas id="chartWeekly"></canvas></div></div>
         <div class="chart-card"><div class="chart-header"><h4>Monthly Volume</h4></div><div class="chart-body"><canvas id="chartMonthly"></canvas></div></div>
         <div class="chart-card"><div class="chart-header"><h4>Discipline Split</h4></div><div class="chart-body donut-body"><canvas id="chartDonut"></canvas></div></div>
         <div class="chart-card"><div class="chart-header"><h4>Cumulative Mileage</h4></div><div class="chart-body"><canvas id="chartCumulative"></canvas></div></div>
         <div class="chart-card"><div class="chart-header"><h4>Planned vs Actual</h4></div><div class="chart-body"><canvas id="chartPvA"></canvas></div></div>
         <div class="chart-card wide"><div class="chart-header"><h4>Training Heatmap</h4></div><div class="chart-body heatmap-body" id="heatmapContainer"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STACKUP VIEW -->
+  <div id="stackupView" style="display:none;">
+    <div class="analytics-container">
+      <div class="analytics-controls">
+        <div class="analytics-control-group"><label>Time Range</label><select id="stackupRange" onchange="renderStackUp()"><option value="4">Last 4 Weeks</option><option value="8" selected>Last 8 Weeks</option><option value="12">Last 12 Weeks</option><option value="16">Last 16 Weeks</option><option value="26">Last 26 Weeks</option></select></div>
+        <div class="analytics-control-group"><label>Data Source</label><select id="stackupSource" onchange="renderStackUp()"><option value="planned">Planned</option><option value="actual">Actual</option></select></div>
+        <div class="analytics-control-group"><label>Compare With</label><select id="stackupCompare" onchange="renderStackUp()"></select></div>
+      </div>
+
+      <!-- StackUp summary cards -->
+      <div class="stackup-summary" id="stackupSummary"></div>
+
+      <div class="charts-grid">
+        <div class="chart-card wide"><div class="chart-header"><h4>Weekly Volume Comparison</h4><div class="chart-tabs" id="stackupWeeklyTabs"><button class="chart-tab active" onclick="switchStackUpWeekly('run')">Run</button><button class="chart-tab" onclick="switchStackUpWeekly('bike')">Bike</button><button class="chart-tab" onclick="switchStackUpWeekly('swim')">Swim</button></div></div><div class="chart-body"><canvas id="chartStackWeekly"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><h4>Cumulative Comparison</h4></div><div class="chart-body"><canvas id="chartStackCumulative"></canvas></div></div>
+        <div class="chart-card"><div class="chart-header"><h4>Discipline Split Comparison</h4></div><div class="chart-body" style="display:flex;gap:20px;align-items:center;justify-content:center;"><div style="flex:1;position:relative;"><div id="stackDonutLabel1" style="text-align:center;font-size:11px;color:var(--text-muted);margin-bottom:4px;"></div><canvas id="chartStackDonut1"></canvas></div><div style="flex:1;position:relative;"><div id="stackDonutLabel2" style="text-align:center;font-size:11px;color:var(--text-muted);margin-bottom:4px;"></div><canvas id="chartStackDonut2"></canvas></div></div></div>
+        <div class="chart-card wide"><div class="chart-header"><h4>Head-to-Head Heatmaps</h4></div><div class="chart-body heatmap-body" style="display:flex;gap:30px;flex-wrap:wrap;" id="stackupHeatmaps"></div></div>
       </div>
     </div>
   </div>

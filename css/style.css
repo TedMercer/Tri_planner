@@ -443,6 +443,58 @@ body {
   color: var(--text-dim);
 }
 
+/* ── StackUp Summary Cards ── */
+.stackup-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stackup-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+.stackup-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.stackup-card-values {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.stackup-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.stackup-val span { font-size: 10px; color: var(--text-muted); font-weight: 400; }
+.stackup-val.compare { color: var(--text-muted); }
+.stackup-val.winner { color: var(--accent); }
+.stackup-val.compare.winner { color: #B5637A; }
+.stackup-vs { font-size: 10px; color: var(--text-dim); font-weight: 600; }
+.stackup-card-names {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 680px) {
+  .stackup-cards { grid-template-columns: repeat(2, 1fr); }
+  .stackup-val { font-size: 14px; }
+}
+
 /* ── User Guide ── */
 .guide-container {
   padding: 24px 28px 60px;
