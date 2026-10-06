@@ -217,6 +217,7 @@
 <a href="#guide-activities" onclick="scrollGuide('guide-activities')">Adding Activities</a>
 <a href="#guide-drag-drop" onclick="scrollGuide('guide-drag-drop')">Drag & Drop</a>
 <a href="#guide-templates" onclick="scrollGuide('guide-templates')">Activity Templates</a>
+<a href="#guide-import" onclick="scrollGuide('guide-import')">Importing Plans</a>
 <a href="#guide-planned-actual" onclick="scrollGuide('guide-planned-actual')">Planned vs Actual</a>
 <a href="#guide-goals" onclick="scrollGuide('guide-goals')">Weekly Goals</a>
 <a href="#guide-profiles" onclick="scrollGuide('guide-profiles')">Athlete Profiles</a>
@@ -294,6 +295,30 @@
 <p>When you open the Add Activity modal, you'll see a <strong>Quick Templates</strong> section at the top. This shows your recent unique workouts as clickable chips. Tap one to instantly fill in the type, distance, and notes.</p>
 <p>To save a workout as a permanent template, check the <strong>"Save as template for quick reuse"</strong> checkbox before saving. Saved templates always appear first in the list.</p>
 <p>Templates are great for recurring workouts — your standard swim set, your regular Z2 ride, your go-to tempo run.</p>
+</section>
+
+<section id="guide-import" class="guide-section">
+<h2>Importing Plans</h2>
+<p>The <strong>📥 Import</strong> tab lets you load an entire training week from a JSON file instead of entering each session by hand — handy for dropping in a plan a coach or an AI assistant produced.</p>
+<div class="guide-steps">
+<div class="guide-step">
+<div class="guide-step-num">1</div>
+<div><strong>Pick the athlete</strong> to import into. It defaults to the profile you're logged in as — you can only import into a profile you have edit access to.</div>
+</div>
+<div class="guide-step">
+<div class="guide-step-num">2</div>
+<div><strong>Choose a JSON file</strong> (or paste JSON directly), then click <strong>Load &amp; preview</strong>.</div>
+</div>
+<div class="guide-step">
+<div class="guide-step-num">3</div>
+<div><strong>Review and edit</strong> the week inline — change any discipline, distance, or note — then click <strong>Import to Planned week</strong>.</div>
+</div>
+</div>
+<div class="guide-info-box">
+<strong>Avoiding duplicates</strong>
+<p>Importing <em>adds</em> to whatever is already planned on those days. Tick <strong>"Clear existing planned sessions on these days before importing"</strong> to replace instead of stack when re-importing a tweaked week. Only run/bike/swim sessions with a distance are imported — rest and strength rows are shown for context but skipped — and only <strong>Planned</strong> data is ever touched.</p>
+</div>
+<p>The JSON needs a <code>days</code> array; each day holds <code>sessions</code> with a <code>discipline</code>, <code>distance</code>, and optional <code>notes</code>. If a day omits its date, dates are filled in from a <code>week_start_date</code> field or the week-start picker.</p>
 </section>
 
 <section id="guide-planned-actual" class="guide-section">
@@ -443,23 +468,23 @@
 <!-- Firebase SDK (CDN, modular via browser ESM) -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js';
-import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteField, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, deleteField, onSnapshot } from 'https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js';
 
 const firebaseConfig = {
-apiKey: "AIzaSyCNeOP4JHRAtlrWe8esd9FyuNqvvy-v2Ys",
-authDomain: "triplan-331d9.firebaseapp.com",
-projectId: "triplan-331d9",
-storageBucket: "triplan-331d9.firebasestorage.app",
-messagingSenderId: "887151269615",
-appId: "1:887151269615:web:7fed988d752a591e91ad1a",
-measurementId: "G-0T6Q3ZMK7B"
+  apiKey: "AIzaSyCNeOP4JHRAtlrWe8esd9FyuNqvvy-v2Ys",
+  authDomain: "triplan-331d9.firebaseapp.com",
+  projectId: "triplan-331d9",
+  storageBucket: "triplan-331d9.firebasestorage.app",
+  messagingSenderId: "887151269615",
+  appId: "1:887151269615:web:7fed988d752a591e91ad1a",
+  measurementId: "G-0T6Q3ZMK7B"
 };
 
 const fbApp = initializeApp(firebaseConfig);
 const db = getFirestore(fbApp);
 
 // Expose Firebase to global scope for non-module scripts
-window.FB = { db, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteField, onSnapshot };
+window.FB = { db, collection, doc, getDocs, getDoc, setDoc, updateDoc, deleteDoc, deleteField, onSnapshot };
 
 // Signal that Firebase is ready
 window.firebaseReady = true;
@@ -470,5 +495,7 @@ window.dispatchEvent(new Event('firebase-ready'));
 <script src="js/app.js"></script>
 <script src="js/strava.js"></script>
 <script src="js/analytics.js"></script>
+<script src="js/import-plan.js"></script>
+<script src="js/admin.js"></script>
 </body>
 </html>
