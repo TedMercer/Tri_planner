@@ -284,26 +284,20 @@
     }
   }
 
-  // Accept the documented object, or a bare array of days.
-  function normalizePlan(raw) {
-    const obj = Array.isArray(raw) ? { days: raw } : (raw || {});
-    if (!Array.isArray(obj.days) || obj.days.length === 0) {
-      throw new Error('No "days" array found in the plan.');
-    }
-    const uiStart = document.getElementById("impWeekStart").value;
-    const start = obj.week_start_date || uiStart;
-    const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    const days = obj.days.map((d, i) => {
+  // Turn one week's day-list into normalized day objects with real dates.
+  function normalizeDays(daysArr, start) {
+    return (daysArr || []).map((d, i) => {
       let date = d.date;
       if (!date) {
-        if (!start) throw new Error('Day ' + (i + 1) + ' has no "date", and no "week_start_date" or week-start picker value to derive one from.');
+        if (!start) throw new Error('A day has no "date", and there is no "week_start_date" (or week-start picker value) to derive one from.');
         const base = new Date(start + "T00:00:00");
         base.setDate(base.getDate() + i);
         date = isoDate(base);
       }
       const dObj = new Date(date + "T00:00:00");
-      const label = d.label || labels[dObj.getDay()];
+      const label = d.label || DAY_LABELS[dObj.getDay()];
       const sessions = (d.sessions || []).map((s) => ({
         discipline: String(s.discipline || "rest").toLowerCase(),
         distance: num(s.distance),
@@ -313,6 +307,45 @@
       }));
       return { date, label, sessions };
     });
+  }
+
+  // Accept: a single week object { days: [...] }, a bare array of day objects,
+  // OR a multi-week array [{ week_start_date, days: [...] }, ...] (or { weeks: [...] }).
+  function normalizePlan(raw) {
+    const uiStart = document.getElementById("impWeekStart").value;
+
+    // Detect a multi-week collection: items that each carry their own `days`.
+    let weeks = null;
+    if (Array.isArray(raw) && raw.length && raw.every((w) => w && Array.isArray(w.days))) {
+      weeks = raw;
+    } else if (raw && Array.isArray(raw.weeks)) {
+      weeks = raw.weeks;
+    }
+
+    if (weeks) {
+      const allDays = [];
+      weeks.forEach((w) => {
+        const start = w.week_start_date || uiStart;
+        normalizeDays(w.days, start).forEach((d) => allDays.push(d));
+      });
+      if (allDays.length === 0) throw new Error("No days found across the weeks in this file.");
+      const dates = allDays.map((d) => d.date).sort();
+      return {
+        phase: "",
+        week_summary: `${weeks.length} weeks · ${dates[0]} → ${dates[dates.length - 1]}`,
+        rationale: "",
+        weekly_totals: computeTotals(allDays),
+        days: allDays,
+      };
+    }
+
+    // Single week: an object with `days`, or a bare array of day objects.
+    const obj = Array.isArray(raw) ? { days: raw } : (raw || {});
+    if (!Array.isArray(obj.days) || obj.days.length === 0) {
+      throw new Error('No "days" array found in the plan.');
+    }
+    const start = obj.week_start_date || uiStart;
+    const days = normalizeDays(obj.days, start);
 
     return {
       phase: obj.phase || "",
